@@ -9,3 +9,5 @@ Task 6: complete (commits bb1dcc6..HEAD, tests: node ../../node_modules/vitest/v
 Task 7: Ruling: không có Postgres/Docker trong môi trường → task domain logic viết theo Repository pattern (interface + in-memory adapter + drizzle adapter), mọi logic test được không cần DB; in-memory là default khi thiếu DATABASE_URL — lý do: WEB-007+ cần test thật, DB chưa có instance — cost nếu sai: phải refactor sang gọi DB trực tiếp sau, ~1 ngày
 Task 7: complete (commits WEB-006..HEAD, tests: node ../../node_modules/vitest/vitest.mjs run in apps/web → 38/38 pass)
 Task 7: Ruling: tree() gộp root lists vào mọi folder → sửa thành tree() chỉ list của folder + rootLists() riêng — test chứng minh design cũ sai — cost nếu sai: 1 lần đổi call site
+Task 8: complete (commits 079d202, tests: node ../../node_modules/vitest/vitest.mjs run in apps/web → 51/51 pass)
+Task 8: Ruling: dùng HTML5 drag & drop native thay vì @dnd-kit — lý do: tránh thêm 200KB dep, hỗ trợ desktop web đủ dùng; thư viện cần cho mobile sau — cost nếu sai: thay ~1 component
