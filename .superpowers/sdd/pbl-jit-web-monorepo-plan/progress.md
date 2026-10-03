@@ -17,3 +17,5 @@ Task 10: complete (tests: node ../../node_modules/vitest/vitest.mjs run in apps/
 Task 10: Ruling: WhiteNoisePlayer nhận prop createAudio (dependency injection) thay vì mock global Audio — lý do: jsdom không implement HTMLMediaElement.play(), mock global sẽ rò sang test khác — cost nếu sai: 1 prop thừa
 Task 11: complete (tests: node ../../node_modules/vitest/vitest.mjs run in apps/web → 146/146 pass)
 Task 11: Ruling: client-side forms validate bằng guard thuần (trim + if), không import @pbl/validators — lý do: vitest.config.ts chỉ alias '@', thêm alias '@pbl/validators' cho 1 form là thay đổi config chung; Zod vẫn là nguồn validate ở server actions — cost nếu sai: validate trùng logic giữa client và server
+Task 12: complete (tests: node ../../node_modules/vitest/vitest.mjs run in apps/web → 189/189 pass)
+Task 12: Ruling: ReminderRepeat định nghĩa trong features/reminders/reminder-logic.ts và được repository import ngược lại — lý do: tránh thêm cycle với packages/types; chấp nhận feature layer là nguồn type — cost nếu sai: server layer phụ thuộc feature layer
