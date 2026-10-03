@@ -8,8 +8,9 @@ import type { SmartListKey } from '@/features/tasks/types'
 
 export async function createTask(title: string) {
   const data = TaskSchema.parse({ title })
-  await repos.tasks.create({ title: data.title })
+  const created = await repos.tasks.create({ title: data.title })
   revalidatePath('/tasks')
+  return created
 }
 
 export async function setTaskDone(id: string, isDone: boolean) {

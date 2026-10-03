@@ -1,4 +1,4 @@
-import { getTasks } from '@/server/actions/task-actions'
+import { getTasks, createTask, setTaskDone, deleteTask } from '@/server/actions/task-actions'
 import { TaskList } from '@/features/tasks/task-list'
 
 export default async function TasksPage() {
@@ -6,7 +6,12 @@ export default async function TasksPage() {
   return (
     <section className="space-y-4">
       <h1 className="text-xl font-semibold">Tasks</h1>
-      <TaskList initialTasks={tasks} />
+      <TaskList
+        initialTasks={tasks}
+        onCreate={createTask}
+        onToggle={setTaskDone}
+        onDelete={deleteTask}
+      />
     </section>
   )
 }
