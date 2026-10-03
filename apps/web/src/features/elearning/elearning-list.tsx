@@ -10,7 +10,7 @@ export function ElearningList({ items }: Props) {
   }
 
   return (
-    <ul className="space-y-1">
+    <ul data-testid="elearning-list" className="space-y-1">
       {items.map((item) => (
         <li key={item.id} className="flex items-center justify-between gap-2 rounded border p-2 text-sm">
           <div>

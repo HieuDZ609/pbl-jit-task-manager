@@ -1,3 +1,5 @@
+import { isAuthBypassEnabled } from "./server/auth-bypass"
+
 import type { NextAuthConfig } from "next-auth"
 
 export const authConfig = {
@@ -6,6 +8,7 @@ export const authConfig = {
   },
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
+      if (isAuthBypassEnabled()) return true
       const isLoggedIn = !!auth?.user
       const isOnDashboard = nextUrl.pathname.startsWith("/dashboard") || nextUrl.pathname.startsWith("/(app)")
       if (isOnDashboard) {

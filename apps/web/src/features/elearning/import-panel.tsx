@@ -75,7 +75,7 @@ export function ImportPanel({ existing, onConfirm }: Props) {
       </div>
 
       {error ? (
-        <p role="alert" className="text-xs text-red-600">
+        <p role="alert" data-testid="import-error" className="text-xs text-red-600">
           {error}
         </p>
       ) : null}

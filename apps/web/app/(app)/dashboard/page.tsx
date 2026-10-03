@@ -1,14 +1,17 @@
-import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
+import { isAuthBypassEnabled } from '@/server/auth-bypass'
+import { auth } from '@/auth'
 import { loadStats } from '@/server/actions/dashboard-actions'
 import { StatsDashboard } from '@/features/dashboard/stats-dashboard'
 
 export const dynamic = 'force-dynamic'
 
 export default async function DashboardPage() {
-  const session = await auth()
-  if (!session) {
-    redirect('/login')
+  if (!isAuthBypassEnabled()) {
+    const session = await auth()
+    if (!session) {
+      redirect('/login')
+    }
   }
 
   const stats = await loadStats(new Date())

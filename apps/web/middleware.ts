@@ -1,10 +1,10 @@
 import NextAuth from "next-auth"
-import { authConfig } from "./auth.config"
+import { authConfig } from "./src/auth.config"
 
 const { auth } = NextAuth(authConfig)
 
-export default auth((req) => {
-  // handled by authorized callback
+export default auth(() => {
+  // Quyết định truy cập nằm trong callbacks.authorized của authConfig.
 })
 
 export const config = {

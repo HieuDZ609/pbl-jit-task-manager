@@ -8,6 +8,8 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./vitest.setup.ts'],
+    // e2e/ chạy bằng Playwright runner, không phải Vitest.
+    exclude: ['**/node_modules/**', '**/dist/**', 'e2e/**', '**/*.e2e.{ts,tsx}'],
     css: true,
     coverage: {
       provider: 'v8',
