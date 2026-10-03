@@ -1,14 +1,25 @@
-import { auth } from "@/auth"
-import { redirect } from "next/navigation"
+import { auth } from '@/auth'
+import { redirect } from 'next/navigation'
+import { loadStats } from '@/server/actions/dashboard-actions'
+import { StatsDashboard } from '@/features/dashboard/stats-dashboard'
+
+export const dynamic = 'force-dynamic'
 
 export default async function DashboardPage() {
   const session = await auth()
   if (!session) {
-    redirect("/login")
+    redirect('/login')
   }
+
+  const stats = await loadStats(new Date())
+
   return (
-    <div>
-      <h1>Dashboard</h1>
-    </div>
+    <section className="space-y-4">
+      <div>
+        <h1 className="text-xl font-semibold">Bảng điều khiển</h1>
+        <p className="text-sm text-muted-foreground">Tổng quan tiến độ công việc, tập trung và thói quen.</p>
+      </div>
+      <StatsDashboard stats={stats} />
+    </section>
   )
 }
