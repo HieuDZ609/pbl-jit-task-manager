@@ -7,3 +7,5 @@ Task 4: complete (commits 063fe68..eedbfcd, tests: node ../../node_modules/vites
 Task 5: complete (commits eedbfcd..bb1dcc6, tests: node ../../node_modules/vitest/vitest.mjs run in packages/validators → 3/3 pass)
 Task 6: complete (commits bb1dcc6..HEAD, tests: node ../../node_modules/vitest/vitest.mjs run in apps/web → 3/3 pass)
 Task 7: Ruling: không có Postgres/Docker trong môi trường → task domain logic viết theo Repository pattern (interface + in-memory adapter + drizzle adapter), mọi logic test được không cần DB; in-memory là default khi thiếu DATABASE_URL — lý do: WEB-007+ cần test thật, DB chưa có instance — cost nếu sai: phải refactor sang gọi DB trực tiếp sau, ~1 ngày
+Task 7: complete (commits WEB-006..HEAD, tests: node ../../node_modules/vitest/vitest.mjs run in apps/web → 38/38 pass)
+Task 7: Ruling: tree() gộp root lists vào mọi folder → sửa thành tree() chỉ list của folder + rootLists() riêng — test chứng minh design cũ sai — cost nếu sai: 1 lần đổi call site
