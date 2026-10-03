@@ -5,3 +5,5 @@ Task 2: complete (commits 7d0977f..6f6a79c, tests: pnpm --filter web exec vitest
 Task 3: complete (commits 6f6a79c..063fe68, tests: pnpm --filter web exec vitest run __tests__/auth/protect.test.tsx → 1/1 pass)
 Task 4: complete (commits 063fe68..eedbfcd, tests: node ../../node_modules/vitest/vitest.mjs run in packages/db → 1/1 pass)
 Task 5: complete (commits eedbfcd..bb1dcc6, tests: node ../../node_modules/vitest/vitest.mjs run in packages/validators → 3/3 pass)
+Task 6: complete (commits bb1dcc6..HEAD, tests: node ../../node_modules/vitest/vitest.mjs run in apps/web → 3/3 pass)
+Task 7: Ruling: không có Postgres/Docker trong môi trường → task domain logic viết theo Repository pattern (interface + in-memory adapter + drizzle adapter), mọi logic test được không cần DB; in-memory là default khi thiếu DATABASE_URL — lý do: WEB-007+ cần test thật, DB chưa có instance — cost nếu sai: phải refactor sang gọi DB trực tiếp sau, ~1 ngày
