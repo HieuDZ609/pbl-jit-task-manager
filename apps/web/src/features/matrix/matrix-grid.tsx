@@ -28,7 +28,13 @@ export function MatrixGrid({ initialTasks, onMove }: Props) {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+    <div className="space-y-3">
+      {tasks.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          Chưa có việc nào. Thêm việc ở trang Tasks rồi kéo vào ma trận.
+        </p>
+      ) : null}
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
       {QUADRANTS.map((q) => {
         const meta = quadrantMeta(q)
         const isOver = dragOver === q
@@ -88,6 +94,7 @@ export function MatrixGrid({ initialTasks, onMove }: Props) {
           </section>
         )
       })}
+      </div>
     </div>
   )
 }

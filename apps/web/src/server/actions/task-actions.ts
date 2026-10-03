@@ -3,10 +3,12 @@
 import { revalidatePath } from 'next/cache'
 import { repos } from '@/server/repositories'
 import { selectSmartList } from '@/features/tasks/smart-lists'
+import { TaskSchema } from '@pbl/validators'
 import type { SmartListKey } from '@/features/tasks/types'
 
 export async function createTask(title: string) {
-  await repos.tasks.create({ title })
+  const data = TaskSchema.parse({ title })
+  await repos.tasks.create({ title: data.title })
   revalidatePath('/tasks')
 }
 

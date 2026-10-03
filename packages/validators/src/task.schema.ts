@@ -3,7 +3,7 @@ import { z } from 'zod'
 export const EisenhowerEnum = ['A', 'B', 'C', 'D'] as const
 
 export const TaskSchema = z.object({
-  title: z.string().min(1),
+  title: z.string().trim().min(1, 'Tiêu đề là bắt buộc'),
   content: z.string().optional(),
   eisenhowerQuadrant: z.enum(EisenhowerEnum).optional(),
   isDone: z.boolean().default(false),
