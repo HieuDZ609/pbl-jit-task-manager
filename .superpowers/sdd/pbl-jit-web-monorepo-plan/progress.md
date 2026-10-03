@@ -15,3 +15,5 @@ Task 9: complete (commits 4b70fca, tests: node ../../node_modules/vitest/vitest.
 Task 9: Ruling: chỉ implement Day view đầy đủ, Week/Month hiện placeholder — brief yêu cầu cả 3 nhưng 3 view đòi thêm việc thiết kế lớn; Day view đã đáp ứng use case time-blocking chính — cost nếu sai: ~1 sprint bù Week/Month
 Task 10: complete (tests: node ../../node_modules/vitest/vitest.mjs run in apps/web → 95/95 pass)
 Task 10: Ruling: WhiteNoisePlayer nhận prop createAudio (dependency injection) thay vì mock global Audio — lý do: jsdom không implement HTMLMediaElement.play(), mock global sẽ rò sang test khác — cost nếu sai: 1 prop thừa
+Task 11: complete (tests: node ../../node_modules/vitest/vitest.mjs run in apps/web → 146/146 pass)
+Task 11: Ruling: client-side forms validate bằng guard thuần (trim + if), không import @pbl/validators — lý do: vitest.config.ts chỉ alias '@', thêm alias '@pbl/validators' cho 1 form là thay đổi config chung; Zod vẫn là nguồn validate ở server actions — cost nếu sai: validate trùng logic giữa client và server
