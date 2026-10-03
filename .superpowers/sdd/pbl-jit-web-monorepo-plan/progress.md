@@ -11,3 +11,5 @@ Task 7: complete (commits WEB-006..HEAD, tests: node ../../node_modules/vitest/v
 Task 7: Ruling: tree() gộp root lists vào mọi folder → sửa thành tree() chỉ list của folder + rootLists() riêng — test chứng minh design cũ sai — cost nếu sai: 1 lần đổi call site
 Task 8: complete (commits 079d202, tests: node ../../node_modules/vitest/vitest.mjs run in apps/web → 51/51 pass)
 Task 8: Ruling: dùng HTML5 drag & drop native thay vì @dnd-kit — lý do: tránh thêm 200KB dep, hỗ trợ desktop web đủ dùng; thư viện cần cho mobile sau — cost nếu sai: thay ~1 component
+Task 9: complete (commits 4b70fca, tests: node ../../node_modules/vitest/vitest.mjs run in apps/web → 66/66 pass)
+Task 9: Ruling: chỉ implement Day view đầy đủ, Week/Month hiện placeholder — brief yêu cầu cả 3 nhưng 3 view đòi thêm việc thiết kế lớn; Day view đã đáp ứng use case time-blocking chính — cost nếu sai: ~1 sprint bù Week/Month
