@@ -1,9 +1,7 @@
 import type { ElearningItemInput, ElearningItemType } from '@/services/elearning/types'
+import type { ElearningItem } from '@/features/elearning/types'
 
-export type ElearningItem = ElearningItemInput & {
-  id: string
-  importedAt: Date
-}
+export type { ElearningItem }
 
 export interface ElearningRepository {
   save(items: ElearningItemInput[]): Promise<ElearningItem[]>

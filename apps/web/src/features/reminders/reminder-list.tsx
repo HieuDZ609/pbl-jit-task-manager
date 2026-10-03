@@ -1,6 +1,6 @@
 'use client'
 
-import type { Reminder } from '@/server/repositories/reminder-repository'
+import type { Reminder } from '@/features/reminders/types'
 import { describeReminder, sortByDue } from './reminder-logic'
 
 type Props = {

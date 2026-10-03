@@ -1,6 +1,6 @@
 'use client'
 
-import type { Habit, HabitLog } from '@/server/repositories/habit-repository'
+import type { Habit, HabitLog } from '@/features/habits/types'
 import { buildHeatmap, currentStreak, longestStreak, toDateKey } from './streak'
 import { Heatmap } from './heatmap'
 

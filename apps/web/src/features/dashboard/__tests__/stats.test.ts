@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { computeStats } from '../stats'
 import type { Task } from '../../tasks/types'
-import type { FocusSession } from '@/server/repositories/focus-session-repository'
-import type { Habit, HabitLog } from '@/server/repositories/habit-repository'
+import type { FocusSession } from '@/features/focus/types'
+import type { Habit, HabitLog } from '@/features/habits/types'
 
 const now = new Date('2026-10-03T09:00:00')
 

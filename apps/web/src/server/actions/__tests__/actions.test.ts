@@ -15,7 +15,6 @@ vi.mock('@/server/repositories', () => {
     list: vi.fn(async () => []),
     listSubtasks: vi.fn(async () => []),
   }
-  const checklists = { addItem: vi.fn(async () => ({})), listForTask: vi.fn(async () => []) }
   const habits = {
     create: vi.fn(async () => ({ id: 'h1' })),
     checkIn: vi.fn(async () => ({})),
@@ -34,7 +33,7 @@ vi.mock('@/server/repositories', () => {
   }
   const focusSessions = { record: vi.fn(async () => ({})), listSince: vi.fn(async () => []) }
   const elearning = { save: vi.fn(async () => []), list: vi.fn(async () => []) }
-  return { repos: { tasks, checklists, habits, reminders, focusSessions, elearning } }
+  return { repos: { tasks, habits, reminders, focusSessions, elearning } }
 })
 
 const { repos } = await import('@/server/repositories')

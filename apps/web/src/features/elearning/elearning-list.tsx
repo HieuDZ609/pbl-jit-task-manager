@@ -1,4 +1,4 @@
-import type { ElearningItem } from '@/server/repositories/elearning-repository'
+import type { ElearningItem } from '@/features/elearning/types'
 
 type Props = {
   items: ElearningItem[]

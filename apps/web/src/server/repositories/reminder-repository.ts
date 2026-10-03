@@ -1,19 +1,7 @@
 import type { ReminderRepeat } from '@/features/reminders/reminder-logic'
+import type { Reminder, CreateReminderInput } from '@/features/reminders/types'
 
-export type Reminder = {
-  id: string
-  title: string
-  dueAt: Date
-  repeat: ReminderRepeat
-  done: boolean
-  notifiedAt: Date | null
-}
-
-export type CreateReminderInput = {
-  title: string
-  dueAt: Date
-  repeat?: ReminderRepeat
-}
+export type { Reminder, CreateReminderInput }
 
 export interface ReminderRepository {
   create(input: CreateReminderInput): Promise<Reminder>
