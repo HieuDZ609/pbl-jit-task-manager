@@ -23,9 +23,9 @@ export default async function MyDayPage() {
           await quickAddToMyDay(title)
           redirect('/myday')
         }}
-        onToggle={(taskId) => {
+        onToggle={async (taskId) => {
           'use server'
-          void toggleMyDayTask(taskId)
+          await toggleMyDayTask(taskId)
         }}
       />
     </section>

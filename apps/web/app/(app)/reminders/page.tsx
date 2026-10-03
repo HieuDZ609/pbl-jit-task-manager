@@ -32,17 +32,17 @@ export default async function RemindersPage() {
       <ReminderList
         reminders={reminders}
         now={new Date()}
-        onDone={(id) => {
+        onDone={async (id) => {
           'use server'
-          void completeReminder(id)
+          await completeReminder(id)
         }}
-        onSnooze={(id, minutes) => {
+        onSnooze={async (id, minutes) => {
           'use server'
-          void snoozeReminder(id, minutes)
+          await snoozeReminder(id, minutes)
         }}
-        onDelete={(id) => {
+        onDelete={async (id) => {
           'use server'
-          void deleteReminder(id)
+          await deleteReminder(id)
         }}
       />
     </section>

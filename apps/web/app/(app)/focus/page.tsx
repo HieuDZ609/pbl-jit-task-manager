@@ -1,4 +1,4 @@
-import { logFocusSession } from '@/server/actions/focus-actions'
+import { saveFocusSession } from '@/server/actions/focus-actions'
 import { FocusTimer } from '@/features/focus/focus-timer'
 import { WhiteNoisePlayer } from '@/features/focus/white-noise'
 
@@ -11,15 +11,7 @@ export default function FocusPage() {
           Pomodoro 25/5 kèm âm thanh nền để chống xao nhãng.
         </p>
       </div>
-      <FocusTimer
-        onSessionComplete={(s) =>
-          logFocusSession({
-            mode: s.mode,
-            minutes: s.minutes,
-            completed: s.completed,
-          })
-        }
-      />
+      <FocusTimer onSessionComplete={saveFocusSession} />
       <WhiteNoisePlayer />
     </section>
   )

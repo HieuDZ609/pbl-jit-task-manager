@@ -22,3 +22,19 @@ export async function logFocusSession(input: {
   revalidatePath('/focus')
   revalidatePath('/myday')
 }
+
+/**
+ * Server action nhận đúng shape mà FocusTimer gửi lên, để truyền thẳng làm prop
+ * cho Client Component mà không cần bọc closure trong Server Component.
+ */
+export async function saveFocusSession(session: {
+  mode: 'work' | 'break' | 'longBreak'
+  minutes: number
+  completed: boolean
+}) {
+  await logFocusSession({
+    mode: session.mode,
+    minutes: session.minutes,
+    completed: session.completed,
+  })
+}

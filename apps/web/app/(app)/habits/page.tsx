@@ -36,13 +36,13 @@ export default async function HabitsPage() {
         habits={habits}
         logsByHabit={logsByHabit}
         today={new Date()}
-        onCheckIn={(habitId) => {
+        onCheckIn={async (habitId) => {
           'use server'
-          void checkInHabit(habitId)
+          await checkInHabit(habitId)
         }}
-        onUndo={(habitId) => {
+        onUndo={async (habitId) => {
           'use server'
-          void undoHabitCheckIn(habitId)
+          await undoHabitCheckIn(habitId)
         }}
       />
     </section>
