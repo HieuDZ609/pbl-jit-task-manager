@@ -24,6 +24,17 @@ const existing: Task = {
   deletedAt: null,
 }
 
+vi.mock('@/server/actions/folder-list-actions', () => ({
+  getFolderTree: async () => [],
+  getRootLists: async () => [],
+  createFolder: vi.fn(),
+  createList: vi.fn(),
+  renameFolder: vi.fn(),
+  renameList: vi.fn(),
+  deleteFolder: vi.fn(),
+  deleteList: vi.fn(),
+}))
+
 vi.mock('@/server/actions/task-actions', () => ({
   getTasks: async () => [existing],
   createTask: async (title: string) => {

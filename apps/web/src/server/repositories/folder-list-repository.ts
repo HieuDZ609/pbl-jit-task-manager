@@ -1,19 +1,6 @@
-export type Folder = {
-  id: string
-  name: string
-  color: string | null
-  sortOrder: number
-}
+import type { Folder, FolderWithLists, List } from '@/features/tasks/folder-list-types'
 
-export type List = {
-  id: string
-  folderId: string | null
-  name: string
-  color: string | null
-  sortOrder: number
-}
-
-export type FolderWithLists = Folder & { lists: List[] }
+export type { Folder, FolderWithLists, List }
 
 export interface FolderListRepository {
   createFolder(name: string): Promise<Folder>
@@ -22,4 +9,8 @@ export interface FolderListRepository {
   rootLists(): Promise<List[]>
   removeFolder(id: string): Promise<void>
   removeList(id: string): Promise<void>
+  renameFolder(id: string, name: string): Promise<Folder>
+  renameList(id: string, name: string): Promise<List>
+  findFolder(id: string): Promise<Folder | null>
+  findList(id: string): Promise<List | null>
 }
