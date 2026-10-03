@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { quickAddToMyDay, toggleMyDayTask } from '@/server/actions/myday-actions'
+import { quickAddToMyDay, toggleMyDayTaskDone } from '@/server/actions/myday-actions'
 import { repos } from '@/server/repositories'
 import { MyDay } from '@/features/dashboard/my-day'
 
@@ -25,7 +25,7 @@ export default async function MyDayPage() {
         }}
         onToggle={async (taskId) => {
           'use server'
-          await toggleMyDayTask(taskId)
+          await toggleMyDayTaskDone(taskId)
         }}
       />
     </section>

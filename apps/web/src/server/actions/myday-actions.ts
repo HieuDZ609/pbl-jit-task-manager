@@ -9,7 +9,12 @@ export async function quickAddToMyDay(title: string) {
   return repos.tasks.create({ title: data.title, myDayAt: new Date() })
 }
 
-export async function toggleMyDayTask(taskId: string) {
+/**
+ * Đánh dấu hoàn thành một việc đang nằm trong My Day.
+ * Tên cũ `toggleMyDayTask` gợi ý ghim/ghim bỏ khỏi My Day, nhưng thực tế chỉ
+ * đảo trạng thái hoàn thành (việc đã nằm trong My Day rồi nên không cần ghim).
+ */
+export async function toggleMyDayTaskDone(taskId: string) {
   const task = await repos.tasks.findById(taskId)
   if (!task) throw new Error('Task not found')
   await repos.tasks.setDone(taskId, !task.isDone)

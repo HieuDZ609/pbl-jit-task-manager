@@ -104,3 +104,39 @@ describe('describeReminder', () => {
     expect(describeReminder(reminder({ dueAt: new Date('2026-10-05T10:00:00') }), now)).toMatch(/còn lâu/i)
   })
 })
+
+describe('nextOccurrence preserves the time of day (review IMP-3)', () => {
+  const daily = { repeat: 'daily' as const, done: true }
+
+  it('keeps the original hour when the reminder is completed late', () => {
+    const next = nextOccurrence(
+      { ...daily, dueAt: new Date('2026-10-03T10:00:00') },
+      new Date('2026-10-03T15:00:00'),
+    )
+    expect(next?.toISOString()).toBe(new Date('2026-10-04T10:00:00').toISOString())
+  })
+
+  it('skips every missed occurrence instead of stacking up', () => {
+    const next = nextOccurrence(
+      { ...daily, dueAt: new Date('2026-10-01T10:00:00') },
+      new Date('2026-10-05T12:00:00'),
+    )
+    expect(next?.toISOString()).toBe(new Date('2026-10-06T10:00:00').toISOString())
+  })
+
+  it('keeps the original hour for weekly reminders too', () => {
+    const next = nextOccurrence(
+      { repeat: 'weekly' as const, done: true, dueAt: new Date('2026-10-01T08:30:00') },
+      new Date('2026-10-03T20:00:00'),
+    )
+    expect(next?.toISOString()).toBe(new Date('2026-10-08T08:30:00').toISOString())
+  })
+
+  it('returns the first future occurrence when dueAt is still ahead', () => {
+    const next = nextOccurrence(
+      { ...daily, dueAt: new Date('2026-10-03T10:00:00') },
+      new Date('2026-10-03T09:00:00'),
+    )
+    expect(next?.toISOString()).toBe(new Date('2026-10-04T10:00:00').toISOString())
+  })
+})

@@ -59,3 +59,22 @@ describe('selectSmartList', () => {
     expect(selectSmartList(tasks, 'completed', now).map((t) => t.id)).toEqual(['1'])
   })
 })
+
+describe('overdue smart list matches the dashboard stat (review IMP-2)', () => {
+  const at = new Date('2026-10-03T09:00:00.000Z')
+
+  it('treats a task that was due earlier today as overdue', () => {
+    const t = task({ id: 'a', dueAt: new Date('2026-10-03T08:00:00.000Z') })
+    expect(selectSmartList([t], 'overdue', at).map((x) => x.id)).toEqual(['a'])
+  })
+
+  it('does not treat a task due later today as overdue', () => {
+    const t = task({ id: 'b', dueAt: new Date('2026-10-03T18:00:00.000Z') })
+    expect(selectSmartList([t], 'overdue', at)).toEqual([])
+  })
+
+  it('still excludes completed tasks', () => {
+    const t = task({ id: 'c', dueAt: new Date('2026-10-01T08:00:00.000Z'), isDone: true })
+    expect(selectSmartList([t], 'overdue', at)).toEqual([])
+  })
+})

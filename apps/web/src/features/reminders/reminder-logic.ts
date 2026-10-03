@@ -29,9 +29,17 @@ export function snoozeUntil(now: Date, minutes = 10): Date {
 
 export function nextOccurrence(reminder: ReminderLike, now: Date): Date | null {
   if (reminder.repeat === 'none') return null
-  const days = reminder.repeat === 'daily' ? 1 : 7
-  const base = reminder.dueAt.getTime() > now.getTime() ? reminder.dueAt : now
-  return new Date(base.getTime() + days * 24 * 60 * 60_000)
+  const step = (reminder.repeat === 'daily' ? 1 : 7) * 24 * 60 * 60_000
+  // Luôn tiến từ dueAt gốc để giữ đúng giờ, và nhảy qua các lần đã trôi qua
+  // thay vì cộng một lần từ `now` (làm lệch giờ của nhắc lặp lại).
+  let next = reminder.dueAt.getTime()
+  if (next <= now.getTime()) {
+    const missed = Math.floor((now.getTime() - next) / step) + 1
+    next += missed * step
+  } else {
+    next += step
+  }
+  return new Date(next)
 }
 
 export function describeReminder(reminder: ReminderLike, now: Date): string {

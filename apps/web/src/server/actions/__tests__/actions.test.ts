@@ -231,18 +231,18 @@ describe('my day actions', () => {
 
   it('toggles a task to done', async () => {
     vi.mocked(repos.tasks.findById).mockResolvedValueOnce({ id: 't1', isDone: false } as never)
-    await mydayActions.toggleMyDayTask('t1')
+    await mydayActions.toggleMyDayTaskDone('t1')
     expect(repos.tasks.setDone).toHaveBeenCalledWith('t1', true)
   })
 
   it('toggles a done task back to open', async () => {
     vi.mocked(repos.tasks.findById).mockResolvedValueOnce({ id: 't1', isDone: true } as never)
-    await mydayActions.toggleMyDayTask('t1')
+    await mydayActions.toggleMyDayTaskDone('t1')
     expect(repos.tasks.setDone).toHaveBeenCalledWith('t1', false)
   })
 
   it('throws for a missing task', async () => {
-    await expect(mydayActions.toggleMyDayTask('nope')).rejects.toThrow()
+    await expect(mydayActions.toggleMyDayTaskDone('nope')).rejects.toThrow()
   })
 })
 

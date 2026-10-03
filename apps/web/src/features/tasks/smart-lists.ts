@@ -16,10 +16,6 @@ function isSameDay(a: Date, b: Date): boolean {
   return startOfDay(a).getTime() === startOfDay(b).getTime()
 }
 
-function isBefore(a: Date, b: Date): boolean {
-  return a.getTime() < b.getTime()
-}
-
 function alive(t: Task): boolean {
   return !t.deletedAt
 }
@@ -34,8 +30,12 @@ export function selectSmartList(
       return tasks.filter((t) => alive(t) && !t.isDone && t.dueAt != null && isSameDay(t.dueAt, now))
     case 'tomorrow':
       return tasks.filter((t) => alive(t) && !t.isDone && t.dueAt != null && isSameDay(t.dueAt, addDays(now, 1)))
+    // So sánh theo mốc thời gian để khớp với stat "quá hạn" trên dashboard
+    // (src/features/dashboard/stats.ts) — cả hai cùng nghĩa là đã qua giờ hạn.
     case 'overdue':
-      return tasks.filter((t) => alive(t) && !t.isDone && t.dueAt != null && isBefore(t.dueAt, startOfDay(now)))
+      return tasks.filter(
+        (t) => alive(t) && !t.isDone && t.dueAt != null && t.dueAt.getTime() < now.getTime(),
+      )
     case 'upcoming':
       return tasks.filter((t) => alive(t) && !t.isDone && t.dueAt != null && isAfterTomorrow(t.dueAt, now))
     case 'completed':
