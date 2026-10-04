@@ -13,6 +13,7 @@
     "test:watch": "vitest",
     "generate": "drizzle-kit generate",
     "migrate": "tsx scripts/migrate.ts",
+    "seed": "tsx scripts/seed.ts",
     "reset": "tsx scripts/reset.ts"
   },
   "dependencies": {

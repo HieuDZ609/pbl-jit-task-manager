@@ -12,7 +12,12 @@ export async function runMigrations(db: Migratable, folder = migrationsFolder): 
 }
 
 if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const { getDb } = await import('../src/client')
-  await runMigrations(getDb())
-  console.log('migrate: xong')
+  const { closeDb, getDb } = await import('../src/client')
+  try {
+    await runMigrations(getDb())
+    console.log('migrate: xong')
+  } finally {
+    // Xem giải thích ở `seed.ts`: không đóng DB thì process không thoát.
+    await closeDb()
+  }
 }
