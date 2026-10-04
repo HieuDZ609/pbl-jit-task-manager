@@ -9,9 +9,10 @@ type Props = {
   onCreate?: (title: string) => Promise<Task | void>
   onToggle?: (id: string, isDone: boolean) => Promise<void>
   onDelete?: (id: string) => Promise<void>
+  onOpen?: (id: string) => void
 }
 
-export function TaskList({ initialTasks, onCreate, onToggle, onDelete }: Props) {
+export function TaskList({ initialTasks, onCreate, onToggle, onDelete, onOpen }: Props) {
   const [tasks, setTasks] = useState(initialTasks)
   const [error, setError] = useState<string | null>(null)
   const [, startTransition] = useTransition()
@@ -77,7 +78,18 @@ export function TaskList({ initialTasks, onCreate, onToggle, onDelete }: Props) 
                 onChange={() => handleToggle(task)}
                 aria-label={`Toggle ${task.title}`}
               />
-              <span className={task.isDone ? 'line-through opacity-60' : ''}>{task.title}</span>
+              {onOpen ? (
+                <button
+                  type="button"
+                  className="text-left font-medium hover:underline"
+                  aria-label={`Mở chi tiết ${task.title}`}
+                  onClick={() => onOpen(task.id)}
+                >
+                  <span className={task.isDone ? 'line-through opacity-60' : ''}>{task.title}</span>
+                </button>
+              ) : (
+                <span className={task.isDone ? 'line-through opacity-60' : ''}>{task.title}</span>
+              )}
               {task.eisenhowerQuadrant && (
                 <span className="rounded bg-muted px-2 py-0.5 text-xs font-semibold">
                   {task.eisenhowerQuadrant}

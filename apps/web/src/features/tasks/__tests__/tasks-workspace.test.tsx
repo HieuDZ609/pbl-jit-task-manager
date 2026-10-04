@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 
 import { TasksWorkspace } from '../tasks-workspace'
 import type { Task } from '../types'
+import type { ChecklistItem } from '../checklist-types'
 import type { FolderWithLists, List } from '../folder-list-types'
 
 function task(overrides: Partial<Task> = {}): Task {
@@ -47,6 +48,12 @@ const actions = {
   onCreateList: vi.fn(),
   onRenameList: vi.fn(),
   onDeleteList: vi.fn(),
+  listChecklistItems: vi.fn(async (_taskId: string) => [] as ChecklistItem[]),
+  addChecklistItem: vi.fn(),
+  setChecklistItemDone: vi.fn(),
+  removeChecklistItem: vi.fn(),
+  addSubtask: vi.fn(),
+  setTaskDone: vi.fn(),
 }
 
 function renderWorkspace() {
@@ -91,6 +98,31 @@ describe('TasksWorkspace filter', () => {
     await userEvent.click(screen.getByRole('button', { name: /tất cả/i }))
     expect(screen.getByText('Viết báo cáo')).toBeInTheDocument()
     expect(screen.getByText('Task l0')).toBeInTheDocument()
+  })
+
+  it('bấm tên task mở panel chi tiết với checklist và subtask', async () => {
+    actions.listChecklistItems.mockResolvedValueOnce([
+      { id: 'i1', taskId: 't1', title: 'Mục A', isDone: false, sortOrder: 0 },
+    ])
+    renderWorkspace()
+    await userEvent.click(screen.getByRole('button', { name: /mở chi tiết Viết báo cáo/i }))
+    expect(await screen.findByText('Mục A')).toBeInTheDocument()
+  })
+
+  it('đóng panel chi tiết', async () => {
+    renderWorkspace()
+    await userEvent.click(screen.getByRole('button', { name: /mở chi tiết Viết báo cáo/i }))
+    await userEvent.click(await screen.findByRole('button', { name: /đóng chi tiết/i }))
+    expect(screen.queryByLabelText(/mục checklist mới/i)).not.toBeInTheDocument()
+  })
+
+  it('thêm checklist item từ panel gọi action qua workspace', async () => {
+    actions.listChecklistItems.mockResolvedValueOnce([])
+    renderWorkspace()
+    await userEvent.click(screen.getByRole('button', { name: /mở chi tiết Viết báo cáo/i }))
+    await userEvent.type(await screen.findByLabelText(/mục checklist mới/i), 'Mục mới')
+    await userEvent.click(screen.getByRole('button', { name: /thêm mục/i }))
+    expect(actions.addChecklistItem).toHaveBeenCalledWith('t1', 'Mục mới')
   })
 
   it('vẫn tạo được task khi đang lọc', async () => {

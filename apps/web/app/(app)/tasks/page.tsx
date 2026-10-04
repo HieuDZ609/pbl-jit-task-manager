@@ -8,6 +8,13 @@ import {
   renameFolder,
   renameList,
 } from '@/server/actions/folder-list-actions'
+import {
+  addChecklistItem,
+  listChecklistItems,
+  removeChecklistItem,
+  setChecklistItemDone,
+} from '@/server/actions/checklist-actions'
+import { addSubtask } from '@/server/actions/subtask-actions'
 import { createTask, deleteTask, getTasks, setTaskDone } from '@/server/actions/task-actions'
 import { TasksWorkspace } from '@/features/tasks/tasks-workspace'
 
@@ -30,6 +37,12 @@ export default async function TasksPage() {
         onCreateList={createList}
         onRenameList={renameList}
         onDeleteList={deleteList}
+        listChecklistItems={listChecklistItems}
+        addChecklistItem={addChecklistItem}
+        setChecklistItemDone={setChecklistItemDone}
+        removeChecklistItem={removeChecklistItem}
+        addSubtask={addSubtask}
+        setTaskDone={setTaskDone}
       />
     </section>
   )

@@ -30,11 +30,6 @@ export async function setTaskQuadrant(id: string, quadrant: 'A' | 'B' | 'C' | 'D
   revalidatePath('/tasks')
 }
 
-export async function addChecklistItem(taskId: string, title: string) {
-  await repos.checklists.create(taskId, title)
-  revalidatePath('/tasks')
-}
-
 export async function getTasks() {
   return repos.tasks.list()
 }
