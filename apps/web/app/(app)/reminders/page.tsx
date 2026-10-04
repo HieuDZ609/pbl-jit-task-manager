@@ -5,13 +5,14 @@ import {
   deleteReminder,
   snoozeReminder,
 } from '@/server/actions/reminder-actions'
-import { repos } from '@/server/repositories'
+import { currentRepos } from '@/server/repositories'
 import { ReminderForm } from '@/features/reminders/reminder-form'
 import { ReminderList } from '@/features/reminders/reminder-list'
 
 export const dynamic = 'force-dynamic'
 
 export default async function RemindersPage() {
+  const repos = await currentRepos()
   const reminders = await repos.reminders.list()
 
   return (

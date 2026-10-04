@@ -8,5 +8,8 @@ dist
 .DS_Store
 .superpowers
 coverage
+.pglite
+# Data dir riêng cho E2E (packages/db/.pglite-e2e) — xem apps/web/playwright.config.ts
+.pglite-e2e
 *.log
 *.tsbuildinfo

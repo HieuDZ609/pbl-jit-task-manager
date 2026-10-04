@@ -18,6 +18,11 @@ import { addSubtask } from '@/server/actions/subtask-actions'
 import { createTask, deleteTask, getTasks, setTaskDone } from '@/server/actions/task-actions'
 import { TasksWorkspace } from '@/features/tasks/tasks-workspace'
 
+// Đọc dữ liệu theo user ở server nên phải render mỗi request. Không có dòng
+// này Next thử prerender lúc `next build`, gọi `currentUserId()` khi chưa có
+// đăng nhập và làm build vỡ.
+export const dynamic = 'force-dynamic'
+
 export default async function TasksPage() {
   const [tasks, tree, rootLists] = await Promise.all([getTasks(), getFolderTree(), getRootLists()])
 

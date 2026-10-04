@@ -9,6 +9,8 @@
     "paths": {
       "@/*": ["./src/*"],
       "@pbl/db": ["../../packages/db/src"],
+      "@pbl/db/client": ["../../packages/db/src/client.ts"],
+      "@pbl/db/scripts/migrate": ["../../packages/db/scripts/migrate.ts"],
       "@pbl/types": ["../../packages/types/src"],
       "@pbl/validators": ["../../packages/validators/src"]
     },

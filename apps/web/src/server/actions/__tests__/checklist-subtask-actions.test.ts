@@ -2,9 +2,19 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 
+vi.mock('@/server/repositories', async () => {
+  const { mockInMemoryRepos } = await import(
+    '@/server/repositories/__tests__/in-memory-bundle'
+  )
+  return mockInMemoryRepos()()
+})
+
+import { resetInMemoryRepos } from '@/server/repositories/__tests__/in-memory-bundle'
+
+/** Store đã mock được cache trên globalThis nên mỗi test phải xoá để bắt đầu rỗng. */
 async function fresh() {
   vi.resetModules()
-  delete (globalThis as { __pblRepos?: unknown }).__pblRepos
+  resetInMemoryRepos()
   const [checklist, subtask, tasks] = await Promise.all([
     import('../checklist-actions'),
     import('../subtask-actions'),
@@ -16,7 +26,7 @@ async function fresh() {
 describe('checklist actions', () => {
   beforeEach(() => {
     vi.resetModules()
-    delete (globalThis as { __pblRepos?: unknown }).__pblRepos
+    resetInMemoryRepos()
   })
 
   it('thêm item, trim tên, gắn đúng taskId', async () => {
@@ -80,7 +90,7 @@ describe('checklist actions', () => {
 describe('subtask actions', () => {
   beforeEach(() => {
     vi.resetModules()
-    delete (globalThis as { __pblRepos?: unknown }).__pblRepos
+    resetInMemoryRepos()
   })
 
   it('tạo subtask với parentId trỏ về task cha', async () => {

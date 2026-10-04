@@ -2,6 +2,11 @@ import { getTasks } from '@/server/actions/task-actions'
 import { setTaskQuadrant } from '@/server/actions/task-actions'
 import { MatrixGrid } from '@/features/matrix/matrix-grid'
 
+// Đọc dữ liệu theo user ở server nên phải render mỗi request. Không có dòng
+// này Next thử prerender lúc `next build`, gọi `currentUserId()` khi chưa có
+// đăng nhập và làm build vỡ.
+export const dynamic = 'force-dynamic'
+
 export default async function MatrixPage() {
   const tasks = await getTasks()
   return (

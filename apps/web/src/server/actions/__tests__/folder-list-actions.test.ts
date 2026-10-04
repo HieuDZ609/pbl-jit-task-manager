@@ -2,21 +2,26 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 
-/**
- * `repos` được cache trên globalThis nên `vi.resetModules()` không đủ — phải xoá
- * cache để mỗi test bắt đầu từ store rỗng. Sẽ hết cần khi Task 10 chuyển sang
- * `reposFor(userId)` trả về instance mới theo user.
- */
+vi.mock('@/server/repositories', async () => {
+  const { mockInMemoryRepos } = await import(
+    '@/server/repositories/__tests__/in-memory-bundle'
+  )
+  return mockInMemoryRepos()()
+})
+
+import { resetInMemoryRepos } from '@/server/repositories/__tests__/in-memory-bundle'
+
+/** Store đã mock được cache trên globalThis nên mỗi test phải xoá để bắt đầu rỗng. */
 async function freshActions() {
   vi.resetModules()
-  delete (globalThis as { __pblRepos?: unknown }).__pblRepos
+  resetInMemoryRepos()
   return import('../folder-list-actions')
 }
 
 describe('folder/list actions', () => {
   beforeEach(() => {
     vi.resetModules()
-    delete (globalThis as { __pblRepos?: unknown }).__pblRepos
+    resetInMemoryRepos()
   })
 
   it('tạo folder, cắt khoảng trắng thừa', async () => {

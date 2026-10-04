@@ -33,10 +33,13 @@ vi.mock('@/server/repositories', () => {
   }
   const focusSessions = { record: vi.fn(async () => ({})), listSince: vi.fn(async () => []) }
   const elearning = { save: vi.fn(async () => []), list: vi.fn(async () => []) }
-  return { repos: { tasks, habits, reminders, focusSessions, elearning } }
+  // `currentRepos` thay cho global `repos` (Task 10): mọi call site giờ lấy
+  // bundle theo user hiện tại. Mock module này nên chỉ cần trả về bundle.
+  return { currentRepos: async () => ({ tasks, habits, reminders, focusSessions, elearning }) }
 })
 
-const { repos } = await import('@/server/repositories')
+const { currentRepos } = await import('@/server/repositories')
+const repos = await currentRepos()
 const tasks = await import('@/server/repositories/task-repository')
 void tasks
 

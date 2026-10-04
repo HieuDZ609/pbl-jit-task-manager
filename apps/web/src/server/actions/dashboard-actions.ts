@@ -1,9 +1,10 @@
 'use server'
 
-import { repos } from '@/server/repositories'
+import { currentRepos } from '@/server/repositories'
 import { computeStats, type Stats } from '@/features/dashboard/stats'
 
 export async function loadStats(now: Date): Promise<Stats> {
+  const repos = await currentRepos()
   const [tasks, focusSessions, habits] = await Promise.all([
     repos.tasks.list(),
     repos.focusSessions.listSince(new Date(now.getFullYear(), now.getMonth(), now.getDate())),

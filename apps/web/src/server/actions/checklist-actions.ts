@@ -7,7 +7,7 @@ import {
   SetChecklistItemDoneSchema,
 } from '@pbl/validators'
 
-import { repos } from '@/server/repositories'
+import { currentRepos } from '@/server/repositories'
 import type { ChecklistItem } from '@/server/repositories/checklist-repository'
 
 function revalidate() {
@@ -15,6 +15,7 @@ function revalidate() {
 }
 
 async function requireItem(id: string): Promise<ChecklistItem> {
+  const repos = await currentRepos()
   const itemId = IdSchema.parse(id)
   const item = await repos.checklists.findById(itemId)
   if (item === null) {
@@ -25,6 +26,7 @@ async function requireItem(id: string): Promise<ChecklistItem> {
 
 export async function addChecklistItem(taskId: string, title: string): Promise<ChecklistItem> {
   const data = CreateChecklistItemSchema.parse({ taskId, title })
+  const repos = await currentRepos()
   if ((await repos.tasks.findById(data.taskId)) === null) {
     throw new Error(`Task ${data.taskId} không tồn tại`)
   }
@@ -35,12 +37,14 @@ export async function addChecklistItem(taskId: string, title: string): Promise<C
 
 export async function listChecklistItems(taskId: string): Promise<ChecklistItem[]> {
   const id = IdSchema.parse(taskId)
+  const repos = await currentRepos()
   return repos.checklists.listByTask(id)
 }
 
 export async function setChecklistItemDone(id: string, isDone: boolean): Promise<ChecklistItem> {
   const data = SetChecklistItemDoneSchema.parse({ id, isDone })
   const existing = await requireItem(data.id)
+  const repos = await currentRepos()
   const item = await repos.checklists.setDone(existing.id, data.isDone)
   revalidate()
   return item
@@ -48,6 +52,7 @@ export async function setChecklistItemDone(id: string, isDone: boolean): Promise
 
 export async function removeChecklistItem(id: string): Promise<void> {
   const item = await requireItem(id)
+  const repos = await currentRepos()
   await repos.checklists.remove(item.id)
   revalidate()
 }
