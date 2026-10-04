@@ -7,20 +7,38 @@ import { users } from '@pbl/db'
 import { createDb } from '@pbl/db/client'
 import { runMigrations } from '@pbl/db/scripts/migrate'
 
+import type { RecordFocusSessionInput } from '../focus-session-repository'
+import type { ElearningItemInput } from '@/services/elearning/types'
 import type { ChecklistRepository } from '../checklist-repository'
+import type { ElearningRepository } from '../elearning-repository'
 import type { FolderListRepository } from '../folder-list-repository'
+import type { FocusSessionRepository } from '../focus-session-repository'
+import type { HabitRepository } from '../habit-repository'
+import type { ReminderRepository } from '../reminder-repository'
 import type { TaskRepository } from '../task-repository'
 import { InMemoryChecklistRepository } from '../in-memory-checklist-repository'
+import { InMemoryElearningRepository } from '../in-memory-elearning-repository'
+import { InMemoryFocusSessionRepository } from '../in-memory-focus-session-repository'
 import { InMemoryFolderListRepository } from '../in-memory-folder-list-repository'
+import { InMemoryHabitRepository } from '../in-memory-habit-repository'
+import { InMemoryReminderRepository } from '../in-memory-reminder-repository'
 import { InMemoryTaskRepository } from '../in-memory-task-repository'
 import { DrizzleChecklistRepository } from '../drizzle-checklist-repository'
 import { DrizzleFolderListRepository } from '../drizzle-folder-list-repository'
 import { DrizzleTaskRepository } from '../drizzle-task-repository'
+import { DrizzleElearningRepository } from '../drizzle-elearning-repository'
+import { DrizzleFocusSessionRepository } from '../drizzle-focus-session-repository'
+import { DrizzleHabitRepository } from '../drizzle-habit-repository'
+import { DrizzleReminderRepository } from '../drizzle-reminder-repository'
 
 type Bundle = {
   tasks: TaskRepository
   checklists: ChecklistRepository
   folderLists: FolderListRepository
+  habits: HabitRepository
+  focusSessions: FocusSessionRepository
+  reminders: ReminderRepository
+  elearning: ElearningRepository
 }
 
 type Harness = { bundle: Bundle; teardown: () => Promise<void> }
@@ -43,6 +61,10 @@ const flavors: Array<[string, () => Promise<Harness>]> = [
         tasks: new InMemoryTaskRepository(),
         checklists: new InMemoryChecklistRepository(),
         folderLists: new InMemoryFolderListRepository(),
+        habits: new InMemoryHabitRepository(),
+        focusSessions: new InMemoryFocusSessionRepository(),
+        reminders: new InMemoryReminderRepository(),
+        elearning: new InMemoryElearningRepository(),
       },
       teardown: async () => {},
     }),
@@ -83,6 +105,10 @@ async function drizzleHarness(): Promise<Harness> {
       tasks: new DrizzleTaskRepository(handle.db, user.id),
       checklists: new DrizzleChecklistRepository(handle.db, user.id),
       folderLists: new DrizzleFolderListRepository(handle.db, user.id),
+      habits: new DrizzleHabitRepository(handle.db, user.id),
+      focusSessions: new DrizzleFocusSessionRepository(handle.db, user.id),
+      reminders: new DrizzleReminderRepository(handle.db, user.id),
+      elearning: new DrizzleElearningRepository(handle.db, user.id),
     },
     teardown: () => handle.close(),
   }
@@ -375,4 +401,299 @@ function contract(repos: () => Bundle): void {
       expect(await repos().checklists.listByTask(task.id)).toEqual([])
     })
   })
+
+  describe('habits', () => {
+    const DAY = new Date('2026-10-05T00:00:00.000Z')
+
+    it('create điền default và trả habit vừa tạo', async () => {
+      const habit = await repos().habits.create({ name: 'Uống nước' })
+
+      expect(habit.name).toBe('Uống nước')
+      expect(habit.frequency).toBe('daily')
+      expect(habit.targetCount).toBe(1)
+      expect(habit.color).toBeNull()
+      expect(habit.icon).toBeNull()
+      expect(habit.archived).toBe(false)
+      expect(habit.startDate).toBeInstanceOf(Date)
+    })
+
+    it('create nhận frequency, targetCount và color', async () => {
+      const habit = await repos().habits.create({
+        name: 'Tập gym',
+        frequency: 'weekly',
+        targetCount: 3,
+        color: '#ff0000',
+      })
+
+      expect(habit).toMatchObject({ frequency: 'weekly', targetCount: 3, color: '#ff0000' })
+    })
+
+    it('listActive không trả habit đã archive', async () => {
+      const { habits } = repos()
+      const active = await habits.create({ name: 'Còn sống' })
+      const gone = await habits.create({ name: 'Đã archive' })
+      await habits.archive(gone.id)
+
+      const ids = (await habits.listActive()).map((h) => h.id)
+      expect(ids).toEqual([active.id])
+    })
+
+    it('archive ném lỗi với id không tồn tại', async () => {
+      await expect(repos().habits.archive(MISSING_ID)).rejects.toThrow(/not found/i)
+    })
+
+    it('checkIn cộng dồn trong cùng một ngày, không tạo log mới', async () => {
+      const { habits } = repos()
+      const habit = await habits.create({ name: 'Uống nước' })
+
+      await habits.checkIn(habit.id, DAY)
+      await habits.checkIn(habit.id, DAY)
+
+      const logs = await habits.logsFor(habit.id)
+      expect(logs).toHaveLength(1)
+      expect(logs[0].count).toBe(2)
+    })
+
+    it('checkIn với increment tùy ý', async () => {
+      const { habits } = repos()
+      const habit = await habits.create({ name: 'Chốt đẩy' })
+      await habits.checkIn(habit.id, DAY, 3)
+      await habits.checkIn(habit.id, DAY, 2)
+
+      expect((await habits.logsFor(habit.id))[0].count).toBe(5)
+    })
+
+    it('checkIn tách log theo từng ngày', async () => {
+      const { habits } = repos()
+      const habit = await habits.create({ name: 'Đọc sách' })
+      await habits.checkIn(habit.id, DAY)
+      await habits.checkIn(habit.id, new Date('2026-10-06T00:00:00.000Z'))
+
+      expect(await habits.logsFor(habit.id)).toHaveLength(2)
+    })
+
+    it('checkIn/setCount ném lỗi khi habit không tồn tại', async () => {
+      const { habits } = repos()
+      await expect(habits.checkIn(MISSING_ID, DAY)).rejects.toThrow(/not found/i)
+      await expect(habits.setCount(MISSING_ID, DAY, 1)).rejects.toThrow(/not found/i)
+    })
+
+    it('setCount ghi đè giá trị đã có', async () => {
+      const { habits } = repos()
+      const habit = await habits.create({ name: 'Undo check-in' })
+      await habits.checkIn(habit.id, DAY, 4)
+      await habits.setCount(habit.id, DAY, 0)
+
+      const logs = await habits.logsFor(habit.id)
+      expect(logs).toHaveLength(1)
+      expect(logs[0].count).toBe(0)
+    })
+
+    it('setCount tạo log khi ngày đó chưa có', async () => {
+      const { habits } = repos()
+      const habit = await habits.create({ name: 'Set thẳng' })
+      await habits.setCount(habit.id, DAY, 2)
+
+      expect((await habits.logsFor(habit.id))[0].count).toBe(2)
+    })
+  })
+
+  describe('focusSessions', () => {
+    const session = (over: Partial<RecordFocusSessionInput> = {}) => ({
+      mode: 'work' as const,
+      startedAt: new Date('2026-10-05T01:00:00.000Z'),
+      endedAt: new Date('2026-10-05T01:25:00.000Z'),
+      durationMin: 25,
+      completed: true,
+      taskId: null,
+      ...over,
+    })
+
+    it('record trả về phiên vừa lưu kèm id', async () => {
+      const saved = await repos().focusSessions.record(session())
+
+      expect(saved.id).toMatch(/^[0-9a-f-]{36}$/)
+      expect(saved.durationMin).toBe(25)
+      expect(saved.completed).toBe(true)
+      expect(saved.taskId).toBeNull()
+      expect(saved.startedAt).toBeInstanceOf(Date)
+    })
+
+    it('listSince chỉ trả phiên bắt đầu từ mốc trở đi', async () => {
+      const { focusSessions } = repos()
+      await focusSessions.record(session({ startedAt: new Date('2026-10-01T00:00:00.000Z') }))
+      await focusSessions.record(session({ startedAt: new Date('2026-10-05T00:00:00.000Z') }))
+
+      const rows = await focusSessions.listSince(new Date('2026-10-03T00:00:00.000Z'))
+      expect(rows).toHaveLength(1)
+      expect(rows[0].startedAt.toISOString()).toBe('2026-10-05T00:00:00.000Z')
+    })
+
+    it('listSince chính xác tại ranh giới (bao gồm mốc)', async () => {
+      const { focusSessions } = repos()
+      const at = new Date('2026-10-05T00:00:00.000Z')
+      await focusSessions.record(session({ startedAt: at }))
+
+      expect(await focusSessions.listSince(at)).toHaveLength(1)
+    })
+
+    it('totalCompletedWorkMinutes chỉ cộng phiên work đã hoàn thành', async () => {
+      const { focusSessions } = repos()
+      await focusSessions.record(session({ mode: 'work', completed: true, durationMin: 25 }))
+      await focusSessions.record(session({ mode: 'work', completed: false, durationMin: 50 }))
+      await focusSessions.record(session({ mode: 'break', completed: true, durationMin: 5 }))
+
+      expect(await focusSessions.totalCompletedWorkMinutes(new Date('2026-10-01T00:00:00.000Z'))).toBe(
+        25,
+      )
+    })
+
+    it('totalCompletedWorkMinutes bỏ qua phiên trước mốc', async () => {
+      const { focusSessions } = repos()
+      await focusSessions.record(
+        session({ startedAt: new Date('2026-09-01T00:00:00.000Z'), durationMin: 90 }),
+      )
+
+      expect(await focusSessions.totalCompletedWorkMinutes(new Date('2026-10-01T00:00:00.000Z'))).toBe(
+        0,
+      )
+    })
+  })
+
+  describe('reminders', () => {
+    const DUE = new Date('2026-10-05T09:00:00.000Z')
+
+    it('create điền default và trả reminder vừa tạo', async () => {
+      const reminder = await repos().reminders.create({ title: 'Gọi mẹ', dueAt: DUE })
+
+      expect(reminder.title).toBe('Gọi mẹ')
+      expect(reminder.repeat).toBe('none')
+      expect(reminder.done).toBe(false)
+      expect(reminder.notifiedAt).toBeNull()
+      expect(reminder.dueAt.toISOString()).toBe('2026-10-05T09:00:00.000Z')
+    })
+
+    it('create nhận repeat', async () => {
+      const reminder = await repos().reminders.create({ title: 'Uống thuốc', dueAt: DUE, repeat: 'daily' })
+
+      expect(reminder.repeat).toBe('daily')
+    })
+
+    it('list trả tất cả reminder', async () => {
+      const { reminders } = repos()
+      await reminders.create({ title: 'A', dueAt: DUE })
+      await reminders.create({ title: 'B', dueAt: DUE })
+
+      expect((await reminders.list()).map((r) => r.title)).toEqual(['A', 'B'])
+    })
+
+    it('markDone đánh dấu xong', async () => {
+      const { reminders } = repos()
+      const reminder = await reminders.create({ title: 'Xong', dueAt: DUE })
+
+      await reminders.markDone(reminder.id)
+
+      expect((await reminders.findById(reminder.id))?.done).toBe(true)
+    })
+
+    it('reschedule đổi giờ và xoá notifiedAt', async () => {
+      const { reminders } = repos()
+      const reminder = await reminders.create({ title: 'Dời', dueAt: DUE })
+      await reminders.markNotified(reminder.id, new Date('2026-10-05T08:00:00.000Z'))
+      const next = new Date('2026-10-06T09:00:00.000Z')
+
+      await reminders.reschedule(reminder.id, next)
+
+      const after = await reminders.findById(reminder.id)
+      expect(after?.dueAt.toISOString()).toBe('2026-10-06T09:00:00.000Z')
+      expect(after?.notifiedAt).toBeNull()
+    })
+
+    it('markNotified lưu thời điểm đã báo', async () => {
+      const { reminders } = repos()
+      const reminder = await reminders.create({ title: 'Đã báo', dueAt: DUE })
+      const at = new Date('2026-10-05T08:59:00.000Z')
+
+      await reminders.markNotified(reminder.id, at)
+
+      expect((await reminders.findById(reminder.id))?.notifiedAt?.toISOString()).toBe(
+        '2026-10-05T08:59:00.000Z',
+      )
+    })
+
+    it('remove xoá hẳn reminder', async () => {
+      const { reminders } = repos()
+      const reminder = await reminders.create({ title: 'Xoá', dueAt: DUE })
+
+      await reminders.remove(reminder.id)
+
+      expect(await reminders.findById(reminder.id)).toBeNull()
+      expect(await reminders.list()).toEqual([])
+    })
+
+    it('mọi thao tác trên id không tồn tại đều ném lỗi', async () => {
+      const { reminders } = repos()
+      await expect(reminders.markDone(MISSING_ID)).rejects.toThrow(/not found/i)
+      await expect(reminders.reschedule(MISSING_ID, DUE)).rejects.toThrow(/not found/i)
+      await expect(reminders.remove(MISSING_ID)).rejects.toThrow(/not found/i)
+      await expect(reminders.markNotified(MISSING_ID, DUE)).rejects.toThrow(/not found/i)
+    })
+  })
+
+  describe('elearning', () => {
+    const item = (over: Partial<ElearningItemInput> = {}): ElearningItemInput => ({
+      course: 'Lập trình',
+      title: 'Bài 1',
+      dueAt: '2026-10-10',
+      url: null,
+      type: 'task',
+      source: 'csv',
+      externalId: null,
+      ...over,
+    })
+
+    it('save trả về item vừa lưu kèm id và importedAt', async () => {
+      const saved = await repos().elearning.save([item()])
+
+      expect(saved).toHaveLength(1)
+      expect(saved[0].id).toMatch(/^[0-9a-f-]{36}$/)
+      expect(saved[0].title).toBe('Bài 1')
+      expect(saved[0].importedAt).toBeInstanceOf(Date)
+    })
+
+    it('save giữ nguyên dueAt dạng chuỗi ngày, không đổi sang Date', async () => {
+      const saved = await repos().elearning.save([item({ dueAt: '2026-10-10' })])
+
+      expect(saved[0].dueAt).toBe('2026-10-10')
+    })
+
+    it('save chấp nhận dueAt và externalId null', async () => {
+      const saved = await repos().elearning.save([item({ dueAt: null, externalId: null })])
+
+      expect(saved[0].dueAt).toBeNull()
+      expect(saved[0].externalId).toBeNull()
+    })
+
+    it('save nhiều item một lượt', async () => {
+      const saved = await repos().elearning.save([item({ title: 'A' }), item({ title: 'B' })])
+
+      expect(saved).toHaveLength(2)
+      expect(await repos().elearning.count()).toBe(2)
+    })
+
+    it('list trả toàn bộ và listByType lọc theo loại', async () => {
+      const { elearning } = repos()
+      await elearning.save([item({ title: 'Task 1', type: 'task' })])
+      await elearning.save([item({ title: 'Course 1', type: 'course' })])
+
+      expect(await elearning.list()).toHaveLength(2)
+      const courses = await elearning.listByType('course')
+      expect(courses.map((r) => r.title)).toEqual(['Course 1'])
+    })
+
+    it('count bằng 0 khi chưa có gì', async () => {
+      expect(await repos().elearning.count()).toBe(0)
+    })
+  })
+
 }

@@ -6,11 +6,21 @@ import type {
   HabitRepository,
 } from './habit-repository'
 
+/**
+ * Khoá ngày theo **UTC**, khớp cột `habit_logs.date` và adapter Drizzle.
+ *
+ * Trước đây hàm này dùng `getFullYear/getMonth/getDate` (giờ local). Ở múi giờ
+ * không UTC thì một log lúc 23:30 có thể rơi sang ngày hôm trước hoặc hôm sau ở
+ * DB, khiến "check-in hai lần trong ngày" thành hai log khác ngày và streak sai.
+ * Ngày luôn quy về UTC midnight, giống `utcDay()` bên `DrizzleHabitRepository`.
+ */
 function dayKey(d: Date): string {
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
+  return d.toISOString().slice(0, 10)
+}
+
+/** Ngày UTC midnight — giá trị thực sự lưu vào cột `date`. */
+function utcDay(d: Date): Date {
+  return new Date(`${dayKey(d)}T00:00:00.000Z`)
 }
 
 export class InMemoryHabitRepository implements HabitRepository {
@@ -54,7 +64,7 @@ export class InMemoryHabitRepository implements HabitRepository {
       existing.count += increment
       return existing
     }
-    const log: HabitLog = { id: randomUUID(), habitId, date, count: increment }
+    const log: HabitLog = { id: randomUUID(), habitId, date: utcDay(date), count: increment }
     this.logs.push(log)
     return log
   }
@@ -67,7 +77,7 @@ export class InMemoryHabitRepository implements HabitRepository {
       existing.count = count
       return existing
     }
-    const log: HabitLog = { id: randomUUID(), habitId, date, count }
+    const log: HabitLog = { id: randomUUID(), habitId, date: utcDay(date), count }
     this.logs.push(log)
     return log
   }

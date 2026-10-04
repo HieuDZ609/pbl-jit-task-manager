@@ -142,7 +142,14 @@ export const habitLogs = pgTable(
   done: boolean('done').default(true),
   count: integer('count').default(1),
   },
-  (t) => [index('habit_logs_user_id_idx').on(t.userId)],
+  (t) => [
+    index('habit_logs_user_id_idx').on(t.userId),
+    // Một habit chỉ có một log mỗi ngày: check-in lần hai trong ngày là cộng thêm
+    // vào `count` chứ không tạo dòng mới. Ràng buộc đặt ở DB thay vì chỉ kiểm
+    // trong code, nếu không thì hai request song song có thể tạo hai dòng cùng
+    // ngày và streak tính sai. Ngày luôn quy về UTC midnight (xem `HabitRepository`).
+    uniqueIndex('habit_logs_habit_id_date_uidx').on(t.habitId, t.date),
+  ],
 )
 
 export const focusSessions = pgTable(
@@ -174,7 +181,11 @@ export const elearningItems = pgTable(
   course: text('course'),
   title: text('title').notNull(),
   url: text('url'),
-  dueAt: timestamp('due_at'),
+  // Cột text chứ không phải timestamp: deadline e-learning về bản chất là *ngày*
+  // (`ElearningItemInput.dueAt` là `string`), không có giờ. Lưu timestamp sẽ buộc
+  // phải chọn múi giờ lúc ghi và lúc đọc, và chỉ cần lệch một ngày là sai deadline.
+  // Giữ nguyên chuỗi `YYYY-MM-DD` qua cả hai chiều.
+  dueAt: text('due_at'),
   type: text('type'),
   syncedAt: timestamp('synced_at'),
   read: boolean('read').default(false),
@@ -192,10 +203,18 @@ export const reminders = pgTable(
     .notNull()
     .references(() => users.id),
   taskId: uuid('task_id').references(() => tasks.id),
+  // Domain `Reminder` là một thực thể độc lập có `title` của riêng nó (không bắt
+  // buộc phải gắn task), nên bảng phải có hai cột này. `repeat` lưu nguyên tắc
+  // lặp; lần lặp tiếp theo luôn giữ **giờ gốc** (xem `ReminderRepository`).
+  title: text('title').notNull().default(''),
+  repeat: varchar('repeat', { length: 10 }).notNull().default('none'),
   scheduledAt: timestamp('scheduled_at').notNull(),
   type: varchar('type', { length: 20 }).default('notification'),
   voiceEnabled: boolean('voice_enabled').default(false),
   firedAt: timestamp('fired_at'),
+  // `cancelled` là chiều **ngược** của domain `done`: xoá đánh dấu chưa xong =
+  // `cancelled = false`. Adapter map hai chiều, đừng đọc thẳng `cancelled` như
+  // `done` — dễ đảo nhầm và sinh reminder "đã xong" giả.
   cancelled: boolean('cancelled').default(false),
   createdAt: timestamp('created_at').defaultNow(),
   },

@@ -10,12 +10,12 @@ import type { TaskRepository } from './task-repository'
 import { currentUserId } from '@/server/current-user'
 
 import { DrizzleChecklistRepository } from './drizzle-checklist-repository'
+import { DrizzleElearningRepository } from './drizzle-elearning-repository'
+import { DrizzleFocusSessionRepository } from './drizzle-focus-session-repository'
 import { DrizzleFolderListRepository } from './drizzle-folder-list-repository'
+import { DrizzleHabitRepository } from './drizzle-habit-repository'
+import { DrizzleReminderRepository } from './drizzle-reminder-repository'
 import { DrizzleTaskRepository } from './drizzle-task-repository'
-import { InMemoryElearningRepository } from './in-memory-elearning-repository'
-import { InMemoryFocusSessionRepository } from './in-memory-focus-session-repository'
-import { InMemoryHabitRepository } from './in-memory-habit-repository'
-import { InMemoryReminderRepository } from './in-memory-reminder-repository'
 
 export type Repos = {
   tasks: TaskRepository
@@ -37,10 +37,9 @@ const byUser = (globalForRepos.__pblReposByUser ??= new Map<string, Repos>())
  * đó là cách khiến việc quên scope là không thể — không có cách nào gọi được repo
  * mà không nêu user. Adapter Drizzle tự thêm `user_id` vào mọi truy vấn.
  *
- * Bundle được cache theo user: adapter Drizzle là wrapper mỏng nên không cần
- * cache, nhưng các repo in-memory (Task 11 chuyển nốt) phải là **instance riêng
- * cho từng user** — nếu dùng chung một instance thì dữ liệu của user A lọt sang
- * user B, đúng thứ Task 10 sinh ra để chặn.
+ * Từ Task 11 **cả 7 repository đã là Drizzle** — không còn repo in-memory nào
+ * trong bundle. Cache theo user vẫn giữ lại: nó rẻ và giữ được hợp đồng "cùng
+ * một user trong một request luôn thấy cùng một bundle".
  */
 export function reposFor(userId: string): Repos {
   const cached = byUser.get(userId)
@@ -51,10 +50,10 @@ export function reposFor(userId: string): Repos {
     tasks: new DrizzleTaskRepository(db, userId),
     checklists: new DrizzleChecklistRepository(db, userId),
     folderLists: new DrizzleFolderListRepository(db, userId),
-    focusSessions: new InMemoryFocusSessionRepository(),
-    habits: new InMemoryHabitRepository(),
-    reminders: new InMemoryReminderRepository(),
-    elearning: new InMemoryElearningRepository(),
+    habits: new DrizzleHabitRepository(db, userId),
+    focusSessions: new DrizzleFocusSessionRepository(db, userId),
+    reminders: new DrizzleReminderRepository(db, userId),
+    elearning: new DrizzleElearningRepository(db, userId),
   }
 
   byUser.set(userId, repos)
