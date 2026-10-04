@@ -8,8 +8,15 @@ test.describe('3. Eisenhower matrix', () => {
     }
   })
 
-  test('shows the empty state when the matrix has no tasks', async ({ page }) => {
+  /**
+ * Lưu ý: empty state cấp ma trận chỉ hiện khi `tasks.length === 0`
+ * (xem `matrix-grid.tsx`). Task tạo ở spec 02 có `eisenhowerQuadrant: null`
+ * nên vẫn làm dataset khác rỗng → assert empty state toàn cục sẽ phụ thuộc
+ * thứ tự chạy. Ở đây ta assert empty state theo từng quadrant, thứ vốn luôn
+ * xác định vì không spec E2E nào gán quadrant cho task.
+ */
+  test('shows an empty state in each quadrant', async ({ page }) => {
     await page.goto('/matrix')
-    await expect(page.getByText(/chưa có việc nào/i)).toBeVisible()
+    await expect(page.getByText(/chưa có công việc/i)).toHaveCount(4)
   })
 })

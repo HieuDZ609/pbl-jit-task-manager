@@ -28,6 +28,7 @@ export function TaskDetailPanel({
 }: Props) {
   const [itemTitle, setItemTitle] = useState('')
   const [subtaskTitle, setSubtaskTitle] = useState('')
+  const [subDone, setSubDone] = useState<Record<string, boolean>>({})
   const [error, setError] = useState<string | null>(null)
 
   async function run(action: () => Promise<unknown>, fallback: string) {
@@ -36,6 +37,18 @@ export function TaskDetailPanel({
       await action()
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : fallback)
+    }
+  }
+
+  async function handleToggleSubtask(sub: Task) {
+    const next = !(subDone[sub.id] ?? sub.isDone)
+    setError(null)
+    setSubDone((prev) => ({ ...prev, [sub.id]: next }))
+    try {
+      await onToggleSubtask(sub.id, next)
+    } catch (cause) {
+      setSubDone((prev) => ({ ...prev, [sub.id]: !next }))
+      setError(cause instanceof Error ? cause.message : 'Không cập nhật được subtask')
     }
   }
 
@@ -128,11 +141,15 @@ export function TaskDetailPanel({
                 <li key={sub.id} className="flex items-center gap-2">
                   <input
                     type="checkbox"
-                    checked={sub.isDone}
+                    checked={subDone[sub.id] ?? sub.isDone}
                     aria-label={`Toggle subtask ${sub.title}`}
-                    onChange={() => run(() => onToggleSubtask(sub.id, !sub.isDone), 'Không cập nhật được subtask')}
+                    onChange={() => handleToggleSubtask(sub)}
                   />
-                  <span className={sub.isDone ? 'line-through opacity-60' : ''}>{sub.title}</span>
+                  <span
+                    className={(subDone[sub.id] ?? sub.isDone) ? 'line-through opacity-60' : ''}
+                  >
+                    {sub.title}
+                  </span>
                 </li>
               ))}
             </ul>

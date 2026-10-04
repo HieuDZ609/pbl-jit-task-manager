@@ -34,9 +34,16 @@ test.describe('8. My Day + stats', () => {
     await expect(page.getByText(/phút tập trung/i)).toBeVisible()
   })
 
-  test('reflects the completed task in today stats', async ({ page }) => {
+  /**
+ * Không assert đúng `/1/`: cả spec 02 cũng toggle task done nên số hoàn thành
+ * hôm nay tích luỹ theo thứ tự chạy. Chỉ cần chứng minh con số phản ánh task
+ * đã hoàn thành, tức lớn hơn 0.
+ */
+test('reflects the completed task in today stats', async ({ page }) => {
     await page.goto('/dashboard')
     const card = page.getByTestId('stat-completedToday')
-    await expect(card).toHaveText(/1/)
+    await expect(card).toHaveText(/\d+/)
+    const completed = Number((await card.textContent())?.replace(/\D/g, '') ?? '0')
+    expect(completed).toBeGreaterThan(0)
   })
 })

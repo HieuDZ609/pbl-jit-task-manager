@@ -99,7 +99,22 @@ describe('TaskDetailPanel', () => {
     expect(actions.onToggleSubtask).toHaveBeenCalledWith('c1', true)
   })
 
-  it('ẩn phần thêm subtask khi bản thân là subtask (chặn nest 3 cấp)', () => {
+  it('toggle subtask cập nhật ngay, không chờ action xong', async () => {
+    actions.onToggleSubtask.mockReturnValueOnce(new Promise<void>(() => {}))
+    renderPanel()
+    await userEvent.click(screen.getByLabelText('Toggle subtask Việc con'))
+    expect(screen.getByLabelText('Toggle subtask Việc con')).toBeChecked()
+  })
+
+it('rollback subtask khi action thất bại', async () => {
+    actions.onToggleSubtask.mockRejectedValueOnce(new Error('DB down'))
+    renderPanel()
+    await userEvent.click(screen.getByLabelText('Toggle subtask Việc con'))
+    expect(screen.getByRole('alert')).toHaveTextContent(/DB down/)
+    expect(screen.getByLabelText('Toggle subtask Việc con')).not.toBeChecked()
+  })
+
+it('ẩn phần thêm subtask khi bản thân là subtask (chặn nest 3 cấp)', () => {
     render(
       <TaskDetailPanel
         task={subtask({ id: 'c1', parentId: 't0', title: 'Con' })}
