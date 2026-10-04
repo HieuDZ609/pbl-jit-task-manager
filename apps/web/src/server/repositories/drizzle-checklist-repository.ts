@@ -1,6 +1,6 @@
 import { and, asc, count, eq } from 'drizzle-orm'
 
-import { checklists, type AppDb } from '@pbl/db'
+import { checklists, tasks, type AppDb } from '@pbl/db'
 
 import type { ChecklistItem, ChecklistRepository } from './checklist-repository'
 
@@ -14,7 +14,17 @@ export class DrizzleChecklistRepository implements ChecklistRepository {
     private readonly userId: string,
   ) {}
 
+  /**
+   * Chặn `task_id` trỏ sang task của user khác.
+   *
+   * `addChecklistItem` đã kiểm `findById` trước khi gọi, nhưng `task_id` chỉ có FK
+   * theo `id` và `create` là đường vào chung — kiểm ở adapter để không phụ thuộc
+   * vào việc mọi action đều nhớ kiểm (đó chính là chỗ hởng đã gặp ở
+   * `logFocusSession`).
+   */
   async create(taskId: string, title: string): Promise<ChecklistItem> {
+    await this.assertTask(taskId)
+
     const [row] = await this.db
       .insert(checklists)
       .values({ userId: this.userId, taskId, title, sortOrder: await this.nextSortOrder() })
@@ -60,6 +70,17 @@ export class DrizzleChecklistRepository implements ChecklistRepository {
       throw new Error(`Checklist item not found: ${id}`)
     }
     await this.db.delete(checklists).where(this.scoped(id))
+  }
+
+  /** Task của user này — chặn `task_id` trỏ sang task của người khác. */
+  private async assertTask(id: string): Promise<void> {
+    const [row] = await this.db
+      .select({ id: tasks.id })
+      .from(tasks)
+      .where(and(eq(tasks.id, id), eq(tasks.userId, this.userId)))
+      .limit(1)
+
+    if (!row) throw new Error(`Task not found: ${id}`)
   }
 
   private scoped(id: string) {

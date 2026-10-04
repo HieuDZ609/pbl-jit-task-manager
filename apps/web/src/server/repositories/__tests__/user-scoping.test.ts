@@ -57,32 +57,44 @@ type Harness = {
 }
 
 /** Dựng cùng một kịch bản cho cả hai loại repo để so sánh công bằng. */
+const IDOR_DB = Symbol('idor-db')
+
+/**
+ * DB thật (PGlite) dùng chung cho các test IDOR.
+ *
+ * Gộp vào một `key` cố định thay vì `randomUUID()` mỗi lần: `createDb` cache
+ * instance theo key trên `globalThis`, và nhiều instance PGlite trỏ cùng một data
+ * dir sẽ khoá data dir của nhau. `beforeEach` chỉ migrate một lần rồi xoá sạch
+ * bảng, nên test nào cũng bắt đầu từ trạng thái sạch.
+ */
+async function buildDrizzleHarness(): Promise<Harness> {
+  const { db, close } = createDb({ driver: 'pglite', key: IDOR_DB })
+  await runMigrations(db)
+  const idA = randomUUID()
+  const idB = randomUUID()
+  await db.insert(users).values([
+    { id: idA, email: `a-${idA}@example.test` },
+    { id: idB, email: `b-${idB}@example.test` },
+  ])
+
+  const side = (userId: string) => ({
+    tasks: new DrizzleTaskRepository(db, userId),
+    checklists: new DrizzleChecklistRepository(db, userId),
+    folderLists: new DrizzleFolderListRepository(db, userId),
+    habits: new DrizzleHabitRepository(db, userId),
+    focusSessions: new DrizzleFocusSessionRepository(db, userId),
+    reminders: new DrizzleReminderRepository(db, userId),
+    elearning: new DrizzleElearningRepository(db, userId),
+  })
+  const harness = { a: side(idA), b: side(idB) }
+  closeAfter.push(close)
+  return harness
+}
+
 const FLAVORS = [
   {
     name: 'drizzle',
-    build: async (): Promise<Harness> => {
-      const { db, close } = createDb({ driver: 'pglite', key: randomUUID() })
-      await runMigrations(db)
-      const idA = randomUUID()
-      const idB = randomUUID()
-      await db.insert(users).values([
-        { id: idA, email: `a-${idA}@example.test` },
-        { id: idB, email: `b-${idB}@example.test` },
-      ])
-
-      const side = (userId: string) => ({
-        tasks: new DrizzleTaskRepository(db, userId),
-        checklists: new DrizzleChecklistRepository(db, userId),
-        folderLists: new DrizzleFolderListRepository(db, userId),
-        habits: new DrizzleHabitRepository(db, userId),
-        focusSessions: new DrizzleFocusSessionRepository(db, userId),
-        reminders: new DrizzleReminderRepository(db, userId),
-        elearning: new DrizzleElearningRepository(db, userId),
-      })
-      const harness = { a: side(idA), b: side(idB) }
-      closeAfter.push(close)
-      return harness
-    },
+    build: buildDrizzleHarness,
   },
   {
     name: 'in-memory',
@@ -263,4 +275,79 @@ for (const flavor of FLAVORS) {
 
 afterEach(async () => {
   for (const close of closeAfter) await close()
+})
+
+/**
+ * Lỗ hổng FK chéo user — chỉ test trên Drizzle.
+ *
+ * `focus_sessions.task_id` chỉ được FK ràng buộc theo `id`, không theo user. Ban đầu
+ * adapter tin thẳng `taskId` mà người gọi đưa vào, và `logFocusSession` là server
+ * action nên bất kỳ client nào cũng gọi được với `taskId` tuỳ ý: đặt phiên tập
+ * trung của mình trỏ sang task của người khác. Khi đọc lại phiên, `taskId` lộ ra cả
+ * id lẫn *sự tồn tại* của task đó.
+ *
+ * Không chạy test này cho flavor in-memory có chủ đích: từ Task 11, `reposFor` đã
+ * toàn Drizzle nên in-memory chỉ còn là test double trong contract test. Nó không
+ * giữ state của task nên không thể kiểm tra sở hữu mà không phải bịa thêm một
+ * đường kiểm tra giả — biên bảo mật thật là adapter Drizzle, và đó là chỗ duy nhất
+ * cần đúng.
+ */
+describe('IDOR — FK chéo user trên adapter Drizzle', () => {
+  it('không gắn phiên tập trung vào task của user khác', async () => {
+    const { a, b } = await buildDrizzleHarness()
+    const taskB = await b.tasks.create({ title: 'Task của B' })
+
+    await expect(
+      a.focusSessions.record({
+        mode: 'work',
+        startedAt: new Date('2026-10-05T01:00:00.000Z'),
+        endedAt: new Date('2026-10-05T01:25:00.000Z'),
+        durationMin: 25,
+        completed: true,
+        taskId: taskB.id,
+      }),
+    ).rejects.toThrow(/Task not found/)
+
+    expect(await a.focusSessions.listSince(new Date('2026-10-01T00:00:00.000Z'))).toEqual([])
+
+    // B vẫn gắn phiên vào task của chính mình được — không phải hỏng chung.
+    await b.focusSessions.record({
+      mode: 'work',
+      startedAt: new Date('2026-10-05T02:00:00.000Z'),
+      endedAt: new Date('2026-10-05T02:25:00.000Z'),
+      durationMin: 25,
+      completed: true,
+      taskId: taskB.id,
+    })
+    expect(await b.focusSessions.listSince(new Date('2026-10-01T00:00:00.000Z'))).toHaveLength(1)
+  })
+
+  it('không đặt task vào list của user khác', async () => {
+    const { a, b } = await buildDrizzleHarness()
+    const folderB = await b.folderLists.createFolder('Folder của B')
+    const listB = await b.folderLists.createList('List của B', folderB.id)
+
+    await expect(a.tasks.create({ title: 'Task của A', listId: listB.id })).rejects.toThrow(
+      /List not found/,
+    )
+    expect(await a.tasks.list()).toEqual([])
+
+    // List của chính mình thì vẫn gắn được.
+    const folderA = await a.folderLists.createFolder('Folder của A')
+    const listA = await a.folderLists.createList('List của A', folderA.id)
+    const taskA = await a.tasks.create({ title: 'Task của A', listId: listA.id })
+    expect(taskA.listId).toBe(listA.id)
+  })
+
+  it('không tạo checklist item trong task của user khác', async () => {
+    const { a, b } = await buildDrizzleHarness()
+    const taskB = await b.tasks.create({ title: 'Task của B' })
+
+    await expect(a.checklists.create(taskB.id, 'Mục của A')).rejects.toThrow(/Task not found/)
+    expect(await a.checklists.listByTask(taskB.id)).toEqual([])
+
+    const taskA = await a.tasks.create({ title: 'Task của A' })
+    const item = await a.checklists.create(taskA.id, 'Mục của A')
+    expect(item.taskId).toBe(taskA.id)
+  })
 })

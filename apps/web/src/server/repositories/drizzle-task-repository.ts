@@ -1,6 +1,6 @@
 import { and, asc, eq, isNull } from 'drizzle-orm'
 
-import { tasks, type AppDb } from '@pbl/db'
+import { lists, tasks, type AppDb } from '@pbl/db'
 
 import type { Task } from '@/features/tasks/types'
 
@@ -28,6 +28,11 @@ export class DrizzleTaskRepository implements TaskRepository {
   ) {}
 
   async create(input: CreateTaskInput): Promise<Task> {
+    // `list_id` chỉ có FK theo `id` nên DB không chặn list của user khác. Kiểm ở
+    // đây, không ở action: `create` là đường vào chung nên bất kỳ ai gọi sau này
+    // cũng được bảo vệ (cùng lý do `assertFolder` của `createList`).
+    if (input.listId != null) await this.assertList(input.listId)
+
     const [row] = await this.db
       .insert(tasks)
       .values({
@@ -123,6 +128,17 @@ export class DrizzleTaskRepository implements TaskRepository {
       .returning()
 
     return toTask(requireRow(row, id))
+  }
+
+  /** List của user này — chặn `list_id` trỏ sang list của người khác. */
+  private async assertList(id: string): Promise<void> {
+    const [row] = await this.db
+      .select({ id: lists.id })
+      .from(lists)
+      .where(and(eq(lists.id, id), eq(lists.userId, this.userId)))
+      .limit(1)
+
+    if (!row) throw new Error(`List not found: ${id}`)
   }
 
   /** Task của user này, còn sống. */
