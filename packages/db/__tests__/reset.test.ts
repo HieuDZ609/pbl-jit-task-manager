@@ -12,7 +12,7 @@ describe('resetDatabase', () => {
     await runMigrations(db)
     // Mọi bảng nghiệp vụ giờ đều NOT NULL user_id ⇒ phải có user trước.
     await db.execute(
-      "insert into users (id, name) values ('00000000-0000-4000-8000-000000000001', 'Hieu')",
+      "insert into users (id, email, name) values ('00000000-0000-4000-8000-000000000001', 'hieu@pbl.local', 'Hieu')",
     )
     await db.execute(
       "insert into folders (id, user_id, name, sort_order) values ('11111111-1111-4111-8111-111111111111', '00000000-0000-4000-8000-000000000001', 'Việc', 0)",

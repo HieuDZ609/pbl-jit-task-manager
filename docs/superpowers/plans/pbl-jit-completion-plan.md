@@ -53,7 +53,7 @@ authority cho hành vi domain hiện có. Các ruling sau phải giữ nguyên k
 | 10 | 3 | Drizzle repository: tasks, folders, lists, checklists + `reposFor(userId)` |
 | 11 | 3 | Drizzle repository: habits, focus, reminders, e-learning + preferences |
 | 12 | 3 | Test chống IDOR (user A không đọc được data user B) |
-| 13 | 4 | Auth số điện thoại/mật khẩu: register + Credentials + login UI |
+| 13 | 4 | Đăng nhập Google-only: upsert user theo email + session.userId |
 | 14 | 4 | Sửa middleware bảo vệ toàn bộ route (trừ public) |
 | 15 | 5 | Calendar Week view + Month view + navigation |
 | 16 | 6 | GitHub Actions CI |
@@ -278,30 +278,43 @@ Steps:
 3. Nếu có fail → sửa repo cho khi nào xanh.
    Commit: `test(db): chặn IDOR giữa hai user`
 
-## Task 13 — Phase 4: auth số điện thoại/mật khẩu
+## Task 13 — Phase 4: đăng nhập Google (thay thế sĐT/mật khẩu)
+
+User chốt giữa chừng: **bỏ toàn bộ sĐT + mật khẩu, chỉ đăng nhập bằng Google**.
+Lần đăng nhập đầu tự tạo user, ai có Google account cũng vào được. Session = JWT
+(giữ nguyên). Chưa có `AUTH_GOOGLE_ID`/`AUTH_GOOGLE_SECRET` → test bằng mock,
+luồng OAuth thật không verify được.
 
 Files:
-- `packages/db/src/repositories/user-repository.ts` (mới)
-- `apps/web/src/server/actions/auth-actions.ts` (mới)
-- `apps/web/src/features/auth/login-form.tsx`, `register-form.tsx` (mới)
-- `apps/web/app/login/page.tsx`, `apps/web/app/register/page.tsx` (mới)
-- `apps/web/src/auth.ts`
+- `packages/db/src/schema.ts` + migration (drizzle-kit generate)
+- `apps/web/src/server/users.ts` (mới): `findOrCreateUserByEmail`
+- `apps/web/src/auth.ts` (callback `jwt`/`session`)
+- `apps/web/src/types/next-auth.d.ts` (mới): augment `Session.userId`/`JWT.userId`
+- `apps/web/src/server/current-user.ts`
+- `apps/web/app/login/page.tsx`
 
 Steps:
-1. Test `normalizePhone`: `'0912345678'`→`+84912345678`, `'+84912345678'` giữ nguyên, `'84912345678'`→`+84912345678`, `'123'`→throw.
+1. Test schema: users không còn `phone`/`password_hash`, `email` NOT NULL + unique.
    **Expected:** FAIL.
-2. Viết `normalizePhone` + `hashPassword`/`verifyPassword` (bcryptjs cost 12).
-   **Expected:** PASS.
-3. Test `registerUser`: tạo ok; email trùng → lỗi; phone trùng → lỗi; password <8 → lỗi.
+2. Sửa schema + `pnpm --filter @pbl/db generate` → migration 0003 (drop
+   `users_phone_unique`, drop `phone`/`password_hash`, `email` SET NOT NULL).
+   **Expected:** PASS. Chú ý `reset.test.ts` chèn user thiếu email → thêm email.
+3. Test `findOrCreateUserByEmail`: tạo mới; idempotent; normalize trim+lower;
+   race song song cùng email → 1 user; không ghi đè name/avatar; email rỗng → throw.
    **Expected:** FAIL.
-4. Viết actions + Credentials provider, `session.user.id` = `userId`.
+4. Viết `findOrCreateUserByEmail` (insert `onConflictDoNothing` + select lại).
    **Expected:** PASS.
-5. Test UI login: sai password → error; đúng → redirect `/dashboard`.
-   **Expected:** FAIL.
-6. Viết form + page; Google button giữ nguyên.
+5. `auth.ts`: callback `jwt` upsert user theo email (khi `user` có mặt) → gán
+   `token.userId`; callback `session` map `session.userId = token.userId`.
    **Expected:** PASS.
-7. Suite xanh.
-   Commit: `feat(auth): đăng ký và đăng nhập bằng số điện thoại + mật khẩu`
+6. `currentUserId()`: thứ tự session (`session.userId`) → bypass dev (`PBL_AUTH_BYPASS`)
+   → fail closed. Test session path + bypass path + production.
+   **Expected:** PASS.
+7. Login page: form server-action `signIn("google", { redirectTo: "/dashboard" })`,
+   nút "Tiếp tục với Google". Test render.
+   **Expected:** PASS.
+8. Suite xanh (typecheck, tests, coverage, build, E2E 41/41).
+   Commit: `feat(auth): đăng nhập Google — upsert user theo email, session.userId`
 
 ## Task 14 — Phase 4: sửa middleware
 
@@ -309,7 +322,7 @@ Files:
 - `apps/web/src/auth.config.ts`
 
 Steps:
-1. Test `isPublicRoute`: `/login`, `/register`, `/api/auth/*` public; `/tasks`, `/calendar`, `/dashboard`, `/` private.
+1. Test `isPublicRoute`: `/login`, `/api/auth`, `/manifest.json` public; `/tasks`, `/calendar`, `/dashboard`, `/` private.
    **Expected:** FAIL (rule `/(app)` sai).
 2. Viết `isPublicRoute` theo allowlist explicit.
    **Expected:** PASS.

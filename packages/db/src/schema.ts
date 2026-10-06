@@ -17,20 +17,16 @@ export const users = pgTable(
   'users',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    // Cả hai nullable: user đăng ký bằng email hoặc bằng số điện thoại.
-    // Unique index nên nhiều NULL vẫn hợp lệ trong Postgres.
-    email: text('email'),
-    phone: text('phone'),
-    passwordHash: text('password_hash'),
+    // Google xác thực danh tính bằng email, nên email là bắt buộc và unique.
+    // Không còn đăng nhập bằng sĐT/mật khẩu (Task 13) → bỏ `phone`,
+    // `password_hash` và `users_phone_unique`.
+    email: text('email').notNull(),
     name: text('name'),
     avatarUrl: text('avatar_url'),
     createdAt: timestamp('created_at').defaultNow(),
     updatedAt: timestamp('updated_at').defaultNow(),
   },
-  (t) => [
-    uniqueIndex('users_email_unique').on(t.email),
-    uniqueIndex('users_phone_unique').on(t.phone),
-  ],
+  (t) => [uniqueIndex('users_email_unique').on(t.email)],
 )
 
 export const folders = pgTable(

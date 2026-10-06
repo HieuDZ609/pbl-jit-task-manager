@@ -27,29 +27,23 @@ describe('db schema — users và userId', () => {
     const config = getTableConfig(schema.users)
     const names = config.columns.map((c) => c.name)
     expect(names).toContain('email')
-    expect(names).toContain('phone')
-    expect(names).toContain('password_hash')
     expect(names).toContain('name')
+    // Google-only: không còn đăng nhập bằng sĐT/mật khẩu.
+    expect(names).not.toContain('phone')
+    expect(names).not.toContain('password_hash')
   })
 
-  it('users có unique index cho email và phone', () => {
+  it('users.email NOT NULL và unique — Google xác thực danh tính bằng email', () => {
     const config = getTableConfig(schema.users)
-    const uniqueIndexes = config.indexes.filter((i) => i.config.unique)
+    const email = config.columns.find((c) => c.name === 'email')
+    expect(email?.notNull).toBe(true)
 
+    const uniqueIndexes = config.indexes.filter((i) => i.config.unique)
     const uniqueColumnNames = uniqueIndexes
       .map((i) => i.config.columns.map((c) => (c as { name?: string }).name))
       .flat()
-
     expect(uniqueColumnNames).toContain('email')
-    expect(uniqueColumnNames).toContain('phone')
-  })
-
-  it('email và phone đều nullable để đăng nhập bằng cả hai cách', () => {
-    const config = getTableConfig(schema.users)
-    const email = config.columns.find((c) => c.name === 'email')
-    const phone = config.columns.find((c) => c.name === 'phone')
-    expect(email?.notNull).toBe(false)
-    expect(phone?.notNull).toBe(false)
+    expect(uniqueColumnNames).not.toContain('phone')
   })
 
   it.each(CORE_TABLES)('%s có userId NOT NULL trỏ tới users', (name) => {
