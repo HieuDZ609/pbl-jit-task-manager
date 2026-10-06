@@ -1,13 +1,5 @@
-node_modules/
-.next/
-out/
-build/
-coverage/
-playwright-report/
-test-results/
-blob-report/
-playwright/.cache/
-*.tsbuildinfo
 next-env.d.ts
 .env
 .env.local
+
+certificates

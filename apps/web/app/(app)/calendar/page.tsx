@@ -16,7 +16,11 @@ export default async function CalendarPage() {
           Quản lý 24 giờ trong ngày bằng cách kéo thả công việc vào khung giờ.
         </p>
       </div>
-      <CalendarView initialTasks={tasks} day={new Date()} onBlock={blockTaskOnDay} />
+      <CalendarView
+        initialTasks={tasks}
+        day={new Date()}
+        onBlock={blockTaskOnDay}
+      />
     </section>
   )
 }

@@ -77,7 +77,7 @@ export default defineConfig({
     },
   ],
   webServer: [
-    boot(PORT, e2eDataDir, { PBL_AUTH_BYPASS: 'true' }),
+    boot(PORT, e2eDataDir, { PBL_AUTH_BYPASS: 'true', PBL_E2E_CALENDAR_TASK: '1' }),
     boot(AUTH_PORT, e2eAuthDataDir, { PBL_AUTH_BYPASS: 'false' }),
   ],
 })

@@ -353,7 +353,7 @@ base dev, consent Google đang ở **Testing** (publish sau).
   `https://localhost:5678/auth/callback/google` rồi đăng nhập bằng 1 account test.
 - E2E vẫn override `AUTH_URL` theo port (127.0.0.1:3100/3101) nên không bị ảnh hưởng.
 
-## Task 15 — Phase 5: calendar week + month
+## Task 15 — Phase 5: calendar week + month ✅
 
 Files:
 - `apps/web/src/features/calendar/week-view.tsx` (mới)
@@ -374,7 +374,7 @@ Steps:
    **Expected:** PASS.
 6. E2E: chuyển Week, drop task vào slot → task nhảy sang giờ đó.
    **Expected:** PASS.
-   Commit: `feat(calendar): hoàn thiện week view, month view và navigation`
+   Commit: `feat(calendar): hoàn thiện week view, month view và navigation` — **xong** (commit `5ddc8ca` chưa; commit mới kèm, xem ledger)
 
 ## Task 16 — Phase 6: GitHub Actions CI
 

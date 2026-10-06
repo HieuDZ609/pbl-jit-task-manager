@@ -45,9 +45,13 @@ export async function getSmartList(key: SmartListKey) {
   return selectSmartList(tasks, key)
 }
 
-export async function blockTaskOnDay(taskId: string, startHour: number, durationMinutes: number) {
-  const day = new Date()
-  const start = new Date(day)
+export async function blockTaskOnDay(
+  taskId: string,
+  startHour: number,
+  durationMinutes: number,
+  day?: Date | string,
+) {
+  const start = new Date(day ?? new Date())
   start.setHours(startHour, 0, 0, 0)
   const end = new Date(start.getTime() + durationMinutes * 60_000)
   const repos = await currentRepos()

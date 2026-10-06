@@ -1,10 +1,10 @@
 import { pathToFileURL } from 'node:url'
 
-import { eq, or } from 'drizzle-orm'
+import { and, eq, or } from 'drizzle-orm'
 import type { PgliteDatabase } from 'drizzle-orm/pglite'
 
 import * as schema from '../src/schema'
-import { folders, lists, users } from '../src/schema'
+import { folders, lists, tasks, users } from '../src/schema'
 
 /**
  * Seed nhận db có schema đầy đủ, giống hệt cách app dựng client
@@ -16,6 +16,8 @@ type SeedDb = PgliteDatabase<typeof schema>
 export const DEV_USER_EMAIL = 'dev@pbl.local'
 export const DEV_FOLDER_NAME = 'Công việc'
 export const DEV_LIST_NAME = 'Việc hôm nay'
+/** Task blocked 09:00 hôm nay chỉ dành cho E2E calendar — bật bằng env. */
+export const E2E_CALENDAR_TASK_TITLE = 'Task mẫu lịch E2E'
 
 export type SeedResult = {
   userId: string
@@ -65,7 +67,34 @@ export async function seed(db: SeedDb): Promise<SeedResult> {
     created.lists += 1
   }
 
+  if (process.env.PBL_E2E_CALENDAR_TASK === '1') {
+    await seedE2eCalendarTask(db, user!.id)
+  }
+
   return { userId: user!.id, created }
+}
+
+/**
+ * Bật bằng `PBL_E2E_CALENDAR_TASK=1` (chỉ webServer E2E chromium của
+ * playwright.config.ts). E2E cần một task ĐÃ được block (có `startAt`) để kéo
+ * chip trong Week view — app không có UI nào tạo startAt từ đầu. Dev không đặt
+ * env nên không bị ảnh hưởng. Idempotent.
+ */
+async function seedE2eCalendarTask(db: SeedDb, userId: string) {
+  const existing = await db
+    .select({ id: tasks.id })
+    .from(tasks)
+    .where(and(eq(tasks.userId, userId), eq(tasks.title, E2E_CALENDAR_TASK_TITLE)))
+  if (existing.length > 0) return
+
+  const start = new Date()
+  start.setHours(9, 0, 0, 0)
+  await db.insert(tasks).values({
+    userId,
+    title: E2E_CALENDAR_TASK_TITLE,
+    startAt: start,
+    dueAt: new Date(start.getTime() + 30 * 60_000),
+  })
 }
 
 async function findUser(db: SeedDb) {
