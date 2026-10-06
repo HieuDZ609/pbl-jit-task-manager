@@ -376,7 +376,7 @@ Steps:
    **Expected:** PASS.
    Commit: `feat(calendar): hoàn thiện week view, month view và navigation` — **xong** (commit `5ddc8ca` chưa; commit mới kèm, xem ledger)
 
-## Task 16 — Phase 6: GitHub Actions CI
+## Task 16 — Phase 6: GitHub Actions CI ✅
 
 Files:
 - `.github/workflows/ci.yml` (mới)
@@ -384,7 +384,7 @@ Files:
 
 Steps:
 1. Test (`ci.test.ts`): parse YAML, assert có jobs install/typecheck/test/e2e/build, `pull_request` + `push` triggers, không có `deploy`.
-   **Expected:** FAIL (chưa có file).
+   **Expected:** FAIL.
 2. Viết `ci.yml`: pnpm 9.15.9, Node 24, cache, drizzle-kit generate, tsc, test:run, playwright chromium, build.
    **Expected:** PASS.
 3. Workflow phải chạy được **không cần secret**: dùng secret tạm cho `AUTH_SECRET` ở step test.
@@ -393,4 +393,5 @@ Steps:
    **Expected:** PASS.
 5. Local verify: chạy lại từng step của workflow.
    **Expected:** PASS.
+   **Hoàn thành** — xem ledger. Chưa push/xác nhận trên GitHub thật (cần user push).
    Commit: `ci: GitHub Actions chạy typecheck, test, E2E và build`
