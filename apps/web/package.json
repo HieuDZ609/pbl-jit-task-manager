@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "pnpm --filter @pbl/db migrate && pnpm --filter @pbl/db seed && next dev",
+    "dev": "pnpm --filter @pbl/db migrate && pnpm --filter @pbl/db seed && next dev --experimental-https -p 5678",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

@@ -9,6 +9,10 @@ import type { NextAuthConfig } from "next-auth"
  * cần DB nằm trong `auth.ts` (runtime thường).
  */
 export const authConfig = {
+  // Bắt buộc khớp chính xác redirect URI đã khai báo trên Google Console:
+  // `https://localhost:5678/auth/callback/google` (Auth.js luôn dùng
+  // `<basePath>/callback/<provider>` — không thể đổi layout này được).
+  basePath: "/auth",
   pages: {
     signIn: "/login",
   },

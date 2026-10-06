@@ -322,7 +322,7 @@ Files:
 - `apps/web/src/auth.config.ts`
 
 Steps:
-1. Test `isPublicRoute`: `/login`, `/api/auth`, `/manifest.json` public; `/tasks`, `/calendar`, `/dashboard`, `/` private.
+1. Test `isPublicRoute`: `/login`, `/auth`, `/manifest.json` public; `/tasks`, `/calendar`, `/dashboard`, `/` private.
    **Expected:** FAIL (rule `/(app)` sai).
 2. Viết `isPublicRoute` theo allowlist explicit.
    **Expected:** PASS.
@@ -332,6 +332,26 @@ Steps:
    **Expected:** PASS.
 5. Xanh.
    Commit: `fix(auth): middleware bảo vệ mọi route private thay vì chỉ /dashboard`
+
+### Wiring Google OAuth thật (hoàn tất sau Task 13/14)
+
+Có credential thật từ `pass.txt` (gitignored). User chốt: `https://localhost:5678` là
+base dev, consent Google đang ở **Testing** (publish sau).
+
+- Auth.js (v0.41.3) **không cho đổi layout** redirect URI — luôn là
+  `<origin><basePath>/callback/<provider>` (hardcode `lib/utils/providers.js`; `merge`
+  ghi đè `callbackUrl`). URI user đưa (`/auth/google/callback`) không tạo được → chọn
+  `basePath: '/auth'` và URI chuẩn **`https://localhost:5678/auth/callback/google`**.
+- `AUTH_URL` quyết định origin (qua `reqWithEnvURL`) → dev phải chạy HTTPS ở 5678:
+  `next dev --experimental-https -p 5678` (mkcert; cần sudo password 1 lần).
+- Route handler chuyển `app/api/auth/[...nextauth]` → `app/auth/[...nextauth]`;
+  allowlist `/api/auth` → `/auth`.
+- `.env.local`: `AUTH_URL=https://localhost:5678`, `AUTH_GOOGLE_ID/SECRET`, `PBL_AUTH_BYPASS=false`.
+- Đã verify ở mức URL: POST `/auth/signin/google` → 302 tới accounts.google.com với
+  `redirect_uri=https://localhost:5678/auth/callback/google` (PKCE S256).
+- **Việc còn lại ngoài code**: user phải sửa URI trong Google Console thành
+  `https://localhost:5678/auth/callback/google` rồi đăng nhập bằng 1 account test.
+- E2E vẫn override `AUTH_URL` theo port (127.0.0.1:3100/3101) nên không bị ảnh hưởng.
 
 ## Task 15 — Phase 5: calendar week + month
 

@@ -11,15 +11,15 @@ import { isPublicRoute } from '../routes'
  *
  * Hai loại bug mà bộ test này nhắm vào:
  * - Quên một trang app → trang đó bị lộ. Danh sách private liệt kê tường minh.
- * - So khớp bằng chuỗi con → `/loginx` hoặc `/api/authfake` được coi là public.
+ * - So khớp bằng chuỗi con → `/loginx` hoặc `/authfake` được coi là public.
  */
 describe('isPublicRoute', () => {
   it('chỉ cho phép login và các endpoint Auth.js', () => {
     expect(isPublicRoute('/login')).toBe(true)
     expect(isPublicRoute('/login/')).toBe(true)
-    expect(isPublicRoute('/api/auth')).toBe(true)
-    expect(isPublicRoute('/api/auth/callback/google')).toBe(true)
-    expect(isPublicRoute('/api/auth/session')).toBe(true)
+    expect(isPublicRoute('/auth')).toBe(true)
+    expect(isPublicRoute('/auth/callback/google')).toBe(true)
+    expect(isPublicRoute('/auth/session')).toBe(true)
   })
 
   it('cho phép manifest PWA vì không chứa dữ liệu người dùng', () => {
@@ -51,12 +51,12 @@ describe('isPublicRoute', () => {
 
   it('không coi tiền tố dạng chuỗi con là public', () => {
     expect(isPublicRoute('/loginx')).toBe(false)
-    expect(isPublicRoute('/api/authfake')).toBe(false)
+    expect(isPublicRoute('/authfake')).toBe(false)
     expect(isPublicRoute('/manifest.jsonx')).toBe(false)
   })
 
   it('bỏ query string trước khi so khớp', () => {
     expect(isPublicRoute('/login?next=/tasks')).toBe(true)
-    expect(isPublicRoute('/api/auth/session?x=1')).toBe(true)
+    expect(isPublicRoute('/auth/session?x=1')).toBe(true)
   })
 })

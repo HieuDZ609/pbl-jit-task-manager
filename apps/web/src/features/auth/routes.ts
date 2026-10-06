@@ -10,8 +10,10 @@
  */
 const PUBLIC_ROUTES = [
   '/login',
-  // Đổi tên thành `/register` vẫn phải private — không còn đăng ký qua form nữa.
-  '/api/auth',
+  // Các endpoint Auth.js nằm dưới `/auth/*` (basePath). Bắt buộc public vì
+  // Google redirect về `/auth/callback/google` — chặn chỗ này thì vòng
+  // OAuth không bao giờ kết thúc.
+  '/auth',
   // PWA manifest, không chứa dữ liệu người dùng. Matcher của middleware bỏ qua
   // `.png` chứ không bỏ `.json`, nên nếu không để đây thì `manifest.json` bị chặn.
   '/manifest.json',

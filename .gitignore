@@ -13,3 +13,5 @@ coverage
 .pglite-e2e*
 *.log
 *.tsbuildinfo
+# Google OAuth credentials (Client ID/Secret) — không commit
+pass.txt
