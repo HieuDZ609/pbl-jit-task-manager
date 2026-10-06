@@ -1,7 +1,13 @@
 import { isAuthBypassEnabled } from "./server/auth-bypass"
+import { isPublicRoute } from "./features/auth/routes"
 
 import type { NextAuthConfig } from "next-auth"
 
+/**
+ * File này được `middleware.ts` import nên chạy ở **edge runtime**: không được
+ * import `@pbl/db` hay bất cứ thứ gì dùng Node API. Providers thật và các callback
+ * cần DB nằm trong `auth.ts` (runtime thường).
+ */
 export const authConfig = {
   pages: {
     signIn: "/login",
@@ -9,13 +15,8 @@ export const authConfig = {
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       if (isAuthBypassEnabled()) return true
-      const isLoggedIn = !!auth?.user
-      const isOnDashboard = nextUrl.pathname.startsWith("/dashboard") || nextUrl.pathname.startsWith("/(app)")
-      if (isOnDashboard) {
-        if (isLoggedIn) return true
-        return false
-      }
-      return true
+      if (isPublicRoute(nextUrl.pathname)) return true
+      return !!auth?.user
     },
   },
   providers: [],
