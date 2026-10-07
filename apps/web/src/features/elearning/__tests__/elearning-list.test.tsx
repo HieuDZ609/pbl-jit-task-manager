@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { ElearningList } from '../elearning-list'
-import type { ElearningItem } from '@/server/repositories/elearning-repository'
+import type { ElearningItem } from '@/features/elearning/types'
 
 function item(overrides: Partial<ElearningItem> = {}): ElearningItem {
   return {

@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { repos } from '@/server/repositories'
+import { currentRepos } from '@/server/repositories'
 
 export async function logFocusSession(input: {
   mode: 'work' | 'break' | 'longBreak'
@@ -11,6 +11,7 @@ export async function logFocusSession(input: {
 }) {
   const endedAt = new Date()
   const startedAt = new Date(endedAt.getTime() - input.minutes * 60_000)
+  const repos = await currentRepos()
   await repos.focusSessions.record({
     mode: input.mode,
     startedAt,

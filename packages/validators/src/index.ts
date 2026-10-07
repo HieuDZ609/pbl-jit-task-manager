@@ -1,3 +1,6 @@
 export * from './task.schema'
 export * from './habit.schema'
 export * from './reminder.schema'
+export * from './folder-list.schema'
+export * from './checklist.schema'
+export * from './subtask.schema'

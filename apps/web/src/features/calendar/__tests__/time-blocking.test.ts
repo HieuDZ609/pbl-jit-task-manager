@@ -1,5 +1,20 @@
 import { describe, it, expect } from 'vitest'
-import { blockTask, buildHourSlots, tasksForDay, unblockTask } from '../time-blocking'
+import {
+  blockTask,
+  buildHourSlots,
+  tasksForDay,
+  unblockTask,
+  startOfWeek,
+  addDays,
+  addMonths,
+  startOfMonth,
+  weekDates,
+  monthGridDates,
+  dateKey,
+  formatDate,
+  formatDayLabel,
+  formatMonthLabel,
+} from '../time-blocking'
 
 const day = new Date('2026-10-03T00:00:00')
 
@@ -45,6 +60,90 @@ describe('unblockTask', () => {
     const [t] = unblockTask(withBlock as never, '1')
     expect(t.startAt).toBeNull()
     expect(t.dueAt).toBeNull()
+  })
+})
+
+describe('startOfWeek', () => {
+  const case_ = (input: string) => startOfWeek(new Date(input)).toISOString()
+
+  it('trả về thứ Hai 00:00 của tuần chứa ngày đã cho (thứ Bảy)', () => {
+    expect(case_('2026-10-03T15:30:00')).toBe(
+      new Date('2026-09-28T00:00:00').toISOString(),
+    )
+  })
+
+  it('coi Chủ Nhật là ngày cuối tuần, không phải đầu tuần', () => {
+    expect(case_('2026-10-04T10:00:00')).toBe(
+      new Date('2026-09-28T00:00:00').toISOString(),
+    )
+  })
+
+  it('giữ nguyên khi đã là thứ Hai', () => {
+    expect(case_('2026-09-28T08:00:00')).toBe(
+      new Date('2026-09-28T00:00:00').toISOString(),
+    )
+  })
+})
+
+describe('date helpers', () => {
+  it('cộng/trừ ngày', () => {
+    expect(addDays(new Date('2026-10-03T00:00:00'), 1).getDate()).toBe(4)
+    expect(addDays(new Date('2026-10-01T00:00:00'), -1).getDate()).toBe(30)
+  })
+
+  it('cộng tháng vượt qua năm', () => {
+    const d = addMonths(new Date('2026-12-15T00:00:00'), 1)
+    expect(d.getFullYear()).toBe(2027)
+    expect(d.getMonth()).toBe(0)
+  })
+
+  it('đầu tháng luôn là ngày 1', () => {
+    const d = startOfMonth(new Date('2026-10-25T00:00:00'))
+    expect(d.getFullYear()).toBe(2026)
+    expect(d.getMonth()).toBe(9)
+    expect(d.getDate()).toBe(1)
+  })
+})
+
+describe('weekDates', () => {
+  it('trả 7 ngày từ thứ Hai đến Chủ Nhật', () => {
+    const dates = weekDates(new Date('2026-10-03T00:00:00'))
+    expect(dates).toHaveLength(7)
+    expect(dateKey(dates[0])).toBe('2026-09-28')
+    expect(dateKey(dates[3])).toBe('2026-10-01')
+    expect(dateKey(dates[6])).toBe('2026-10-04')
+    expect(isMondayToSunday(dates)).toBe(true)
+  })
+})
+
+describe('monthGridDates', () => {
+  it('trả lưới 6×7 phủ cả tháng', () => {
+    const dates = monthGridDates(new Date('2026-10-15T00:00:00'))
+    expect(dates).toHaveLength(42)
+    expect(dateKey(dates[0])).toBe('2026-09-28')
+    expect(dateKey(dates[41])).toBe('2026-11-08')
+    expect(dates.some((d) => dateKey(d) === '2026-10-01')).toBe(true)
+    expect(dates.some((d) => dateKey(d) === '2026-10-31')).toBe(true)
+    expect(isMondayToSunday(dates)).toBe(true)
+  })
+
+  it('đặt ngày 1 của tháng vào đúng cột (10/2026: thứ Năm → index 3)', () => {
+    const dates = monthGridDates(new Date('2026-10-15T00:00:00'))
+    const first = dates.findIndex((d) => d.getDate() === 1)
+    expect(first).toBe(3)
+  })
+})
+
+function isMondayToSunday(dates: Date[]): boolean {
+  return dates.every((d, i) => d.getDay() === (i + 1) % 7)
+}
+
+describe('formatting', () => {
+  it('dateKey/formatDate/formatDayLabel/formatMonthLabel', () => {
+    expect(dateKey(new Date('2026-10-05T00:00:00'))).toBe('2026-10-05')
+    expect(formatDate(new Date('2026-10-05T00:00:00'))).toBe('05/10/2026')
+    expect(formatDayLabel(new Date('2026-10-05T00:00:00'))).toBe('Thứ Hai, 05/10/2026')
+    expect(formatMonthLabel(new Date('2026-10-05T09:00:00'))).toBe('Tháng 10, 2026')
   })
 })
 

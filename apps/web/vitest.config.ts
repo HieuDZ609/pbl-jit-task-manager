@@ -27,6 +27,10 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // Test-only: app chạy migration ngoài process (xem `packages/db/scripts`),
+      // chỉ contract test cần gọi trực tiếp để dựng schema trên PGlite.
+      '@pbl/db/scripts/migrate': path.resolve(__dirname, '../../packages/db/scripts/migrate.ts'),
+      '@pbl/db/client': path.resolve(__dirname, '../../packages/db/src/client.ts'),
       '@pbl/validators': path.resolve(__dirname, '../../packages/validators/src/index.ts'),
       '@pbl/types': path.resolve(__dirname, '../../packages/types/src/index.ts'),
       '@pbl/db': path.resolve(__dirname, '../../packages/db/src/index.ts'),

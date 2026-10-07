@@ -5,12 +5,17 @@
   "type": "module",
   "packageManager": "pnpm@9.15.9",
   "scripts": {
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "pnpm --filter @pbl/db test && pnpm --filter web test",
+    "test:watch": "vitest",
+    "db:generate": "pnpm --filter @pbl/db generate",
+    "db:migrate": "pnpm --filter @pbl/db migrate",
+    "db:reset": "pnpm --filter @pbl/db reset",
+    "typecheck": "pnpm -r typecheck"
   },
   "devDependencies": {
-    "vitest": "^2.1.8",
     "@types/node": "^22.10.5",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8",
+    "yaml": "^2.9.1"
   }
 }

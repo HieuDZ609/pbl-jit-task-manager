@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+# Không dùng secret nào: AUTH_SECRET là giá trị dev dùng để boot app trong CI.
+env:
+  AUTH_SECRET: ci-only-dev-secret-not-for-production
+
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+  typecheck:
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Generate drizzle schema
+        run: pnpm --filter @pbl/db generate
+      - name: Typecheck
+        run: pnpm typecheck
+
+  test:
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Generate drizzle schema
+        run: pnpm --filter @pbl/db generate
+      - name: Unit tests (web, có coverage)
+        run: pnpm --filter web test:coverage
+      - name: Unit tests (db)
+        run: pnpm --filter @pbl/db test
+      - name: Root tests (ci/monorepo)
+        run: pnpm exec vitest run tests/root
+
+  e2e:
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install Playwright chromium
+        run: pnpm exec playwright install --with-deps chromium
+        working-directory: apps/web
+      - name: E2E tests
+        run: pnpm --filter web test:e2e
+
+  build:
+    runs-on: ubuntu-latest
+    needs: install
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Generate drizzle schema
+        run: pnpm --filter @pbl/db generate
+      - name: Build web
+        run: pnpm --filter web build

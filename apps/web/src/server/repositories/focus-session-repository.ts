@@ -1,14 +1,6 @@
-export type FocusSession = {
-  id: string
-  mode: 'work' | 'break' | 'longBreak'
-  startedAt: Date
-  endedAt: Date
-  durationMin: number
-  completed: boolean
-  taskId: string | null
-}
+import type { FocusSession, RecordFocusSessionInput } from '@/features/focus/types'
 
-export type RecordFocusSessionInput = Omit<FocusSession, 'id'>
+export type { FocusSession, RecordFocusSessionInput }
 
 export interface FocusSessionRepository {
   record(input: RecordFocusSessionInput): Promise<FocusSession>

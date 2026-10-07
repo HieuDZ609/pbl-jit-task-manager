@@ -1,12 +1,54 @@
-import { getTasks } from '@/server/actions/task-actions'
-import { TaskList } from '@/features/tasks/task-list'
+import {
+  createFolder,
+  createList,
+  deleteFolder,
+  deleteList,
+  getFolderTree,
+  getRootLists,
+  renameFolder,
+  renameList,
+} from '@/server/actions/folder-list-actions'
+import {
+  addChecklistItem,
+  listChecklistItems,
+  removeChecklistItem,
+  setChecklistItemDone,
+} from '@/server/actions/checklist-actions'
+import { addSubtask } from '@/server/actions/subtask-actions'
+import { createTask, deleteTask, getTasks, setTaskDone } from '@/server/actions/task-actions'
+import { TasksWorkspace } from '@/features/tasks/tasks-workspace'
+
+// Đọc dữ liệu theo user ở server nên phải render mỗi request. Không có dòng
+// này Next thử prerender lúc `next build`, gọi `currentUserId()` khi chưa có
+// đăng nhập và làm build vỡ.
+export const dynamic = 'force-dynamic'
 
 export default async function TasksPage() {
-  const tasks = await getTasks()
+  const [tasks, tree, rootLists] = await Promise.all([getTasks(), getFolderTree(), getRootLists()])
+
   return (
     <section className="space-y-4">
       <h1 className="text-xl font-semibold">Tasks</h1>
-      <TaskList initialTasks={tasks} />
+      <TasksWorkspace
+        initialTasks={tasks}
+        tree={tree}
+        rootLists={rootLists}
+        onCreate={createTask}
+        onToggle={setTaskDone}
+        onDelete={deleteTask}
+        onCreateFolder={createFolder}
+        onRenameFolder={renameFolder}
+        onDeleteFolder={deleteFolder}
+        onCreateList={createList}
+        onRenameList={renameList}
+        onDeleteList={deleteList}
+        listChecklistItems={listChecklistItems}
+        addChecklistItem={addChecklistItem}
+        setChecklistItemDone={setChecklistItemDone}
+        removeChecklistItem={removeChecklistItem}
+        addSubtask={addSubtask}
+        setTaskDone={setTaskDone}
+      />
     </section>
   )
 }

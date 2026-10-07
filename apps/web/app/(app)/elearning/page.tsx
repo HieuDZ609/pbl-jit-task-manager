@@ -1,12 +1,13 @@
 import { redirect } from 'next/navigation'
 import { importElearningItems } from '@/server/actions/elearning-actions'
-import { repos } from '@/server/repositories'
+import { currentRepos } from '@/server/repositories'
 import { ImportPanel } from '@/features/elearning/import-panel'
 import { ElearningList } from '@/features/elearning/elearning-list'
 
 export const dynamic = 'force-dynamic'
 
 export default async function ElearningPage() {
+  const repos = await currentRepos()
   const items = await repos.elearning.list()
 
   return (

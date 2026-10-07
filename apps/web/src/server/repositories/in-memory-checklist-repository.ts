@@ -16,6 +16,10 @@ export class InMemoryChecklistRepository {
     return item
   }
 
+  async findById(id: string): Promise<ChecklistItem | null> {
+    return this.rows.find((r) => r.id === id) ?? null
+  }
+
   async listByTask(taskId: string): Promise<ChecklistItem[]> {
     return this.rows.filter((r) => r.taskId === taskId)
   }

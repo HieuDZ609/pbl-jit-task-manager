@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { checkInHabit, createHabit, undoHabitCheckIn } from '@/server/actions/habit-actions'
-import { repos } from '@/server/repositories'
+import { currentRepos } from '@/server/repositories'
 import { HabitForm } from '@/features/habits/habit-form'
 import { HabitTracker } from '@/features/habits/habit-tracker'
 import type { HabitLog } from '@/server/repositories/habit-repository'
@@ -8,6 +8,7 @@ import type { HabitLog } from '@/server/repositories/habit-repository'
 export const dynamic = 'force-dynamic'
 
 export default async function HabitsPage() {
+  const repos = await currentRepos()
   const habits = await repos.habits.listActive()
 
   const logsByHabit: Record<string, HabitLog[]> = {}

@@ -35,6 +35,18 @@ describe('TaskList', () => {
     expect(screen.getByText(/chưa có công việc/i)).toBeInTheDocument()
   })
 
+  it('calls onOpen with task id when title clicked', async () => {
+    const onOpen = vi.fn()
+    render(<TaskList initialTasks={[tasks[0]]} onOpen={onOpen} />)
+    await userEvent.click(screen.getByRole('button', { name: /mở chi tiết Viết báo cáo/i }))
+    expect(onOpen).toHaveBeenCalledWith('1')
+  })
+
+  it('renders title as plain text when no onOpen provided', () => {
+    render(<TaskList initialTasks={[tasks[0]]} />)
+    expect(screen.getByText('Viết báo cáo').tagName).toBe('SPAN')
+  })
+
   it('shows quadrant badge when set', () => {
     const withQ: Task[] = [{ id: '3', title: 'Urgent', isDone: false, eisenhowerQuadrant: 'A', deletedAt: null }]
     render(<TaskList initialTasks={withQ} />)

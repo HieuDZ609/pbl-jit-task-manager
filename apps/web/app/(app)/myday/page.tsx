@@ -1,11 +1,12 @@
 import { redirect } from 'next/navigation'
 import { quickAddToMyDay, toggleMyDayTaskDone } from '@/server/actions/myday-actions'
-import { repos } from '@/server/repositories'
+import { currentRepos } from '@/server/repositories'
 import { MyDay } from '@/features/dashboard/my-day'
 
 export const dynamic = 'force-dynamic'
 
 export default async function MyDayPage() {
+  const repos = await currentRepos()
   const tasks = await repos.tasks.list()
 
   return (

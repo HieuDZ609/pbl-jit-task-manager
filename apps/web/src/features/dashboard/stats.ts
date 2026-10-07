@@ -1,7 +1,7 @@
 import { toDateKey } from '@/features/habits/streak'
 import type { Task } from '@/features/tasks/types'
-import type { FocusSession } from '@/server/repositories/focus-session-repository'
-import type { Habit, HabitLog } from '@/server/repositories/habit-repository'
+import type { FocusSession } from '@/features/focus/types'
+import type { Habit, HabitLog } from '@/features/habits/types'
 
 export type StatsInput = {
   tasks: Task[]
