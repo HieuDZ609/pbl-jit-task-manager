@@ -13,12 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: pnpm
-      - name: Enable pnpm
-        run: corepack enable
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -27,12 +26,11 @@ jobs:
     needs: install
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: pnpm
-      - name: Enable pnpm
-        run: corepack enable
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Generate drizzle schema
@@ -45,12 +43,11 @@ jobs:
     needs: install
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: pnpm
-      - name: Enable pnpm
-        run: corepack enable
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Generate drizzle schema
@@ -67,12 +64,11 @@ jobs:
     needs: install
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: pnpm
-      - name: Enable pnpm
-        run: corepack enable
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Install Playwright chromium
@@ -86,12 +82,11 @@ jobs:
     needs: install
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: pnpm
-      - name: Enable pnpm
-        run: corepack enable
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Generate drizzle schema
